@@ -3,7 +3,7 @@ import datajanitor
 
 # Get the datasets and do basic data cleaning
 shoppers = datajanitor.getDataset('shoppers')
-df = shoppers.getData(doOHE=True)
+df = shoppers.getDataFrame(doOHE=True)
 
 # Partition and transform the dataset
 

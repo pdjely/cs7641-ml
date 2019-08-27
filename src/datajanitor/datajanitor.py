@@ -3,45 +3,55 @@ import os
 import tqdm
 import pandas as pd
 
-"""
-Base class for retrieving, cleaning, and splitting data sets
-"""
+
 class DataJanitor:
+    """
+    Base class for retrieving, cleaning, and splitting data sets
+    """
     def __init__(self,
                  name='uninitialized',
                  dataUrl=None,
                  filename=None):
         self.name = name
         self.dataUrl = dataUrl
-        self.dataLoaded = False
-        self.dataDownloaded = False
         self.filestorePath = os.path.join(os.path.dirname(__file__),
                                           'datastore')
         self.filename = filename
         self.fullFilePath = os.path.join(self.filestorePath, self.filename)
         self.categoricalCols = None
         self.numericCols = None
+        self.df = None  # raw pandas dataframe
 
-    """"
-    Retrieve dataset from local datastore or download it
-    """
     def getData(self, **kwargs):
-        # Now that the file is there (or should be), format it, convert to csv
-        # (if necessary) and return a pandas dataframe
-        self.fetchData()
-        df = self.formatData(**kwargs)
-        return df
+        # Download file (if necessary), format it, convert to csv
+        if self.df is None:
+            self.fetchData()
+        self.formatData(**kwargs)
 
-    """
-    Convert the raw dataset to a pandas dataframe
-    """
+    def getDataFrame(self, **kwargs):
+        """"
+        Retrieve underlying dataset as a pandas dataframe
+
+        Fetch the dataset and format it if necessary.
+        """
+        self.getData(**kwargs)
+
+        return self.df
+
     def formatData(self, **kwargs):
-        return pd.read_csv(self.fullFilePath)
+        """
+        Convert the raw dataset to a pandas dataframe
 
-    """
-    Download dataset from remote location, blasting whatever was saved locally.
-    """
+        Subclasses are expected to call this method at the start of the
+        overriding method to convert the downloaded file to a pandas
+        data frame
+        """
+        self.df = pd.read_csv(self.fullFilePath)
+
     def fetchData(self):
+        """
+        Download dataset from remote location, blasting whatever was saved locally.
+        """
         if not (os.path.exists(self.fullFilePath)):
             print('Fetching {} dataset from {}'.format(self.name, self.dataUrl))
             # requests download adapted from stackoverflow article (1) and (2)
