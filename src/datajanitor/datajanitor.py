@@ -2,6 +2,8 @@ import requests
 import os
 import tqdm
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from .binscaler import BinScaler
 
 
 class DataJanitor:
@@ -20,6 +22,7 @@ class DataJanitor:
         self.fullFilePath = os.path.join(self.filestorePath, self.filename)
         self.categoricalCols = None
         self.numericCols = None
+        self.label = None
         self.df = None  # raw pandas dataframe
 
     def getData(self, **kwargs):
@@ -37,6 +40,29 @@ class DataJanitor:
         self.getData(**kwargs)
 
         return self.df
+
+    def partitionData(self, percent=0.3, scale=True):
+        """
+        Split dataset into train and test
+        :param percent: percent of examples for test set
+        :param scale: scale numeric columns
+        :return: train_x, test_x, train_y, test_y
+        """
+        trainx, testx, trainy, testy = \
+            train_test_split(self.df.drop(self.label, axis=1),
+                             self.df[self.label],
+                             test_size=percent)
+
+        for df in [trainx, testx, trainy, testy]:
+            df.reset_index(inplace=True, drop=True)
+            # df.drop('index', axis=1, inplace=True)
+
+        if scale:
+            scaler = BinScaler(self.numericCols)
+            trainx = scaler.fit_transform(trainx)
+            testx = scaler.transform(testx)
+
+        return trainx, testx, trainy, testy
 
     def formatData(self, **kwargs):
         """

@@ -1,11 +1,16 @@
 from . import shoppers, adult
 
-"""
-Factory function to generate a dataset
-"""
+
 def getDataset(dataSetName):
+    """
+    Factory function to generate a dataset by name
+    :param dataSetName:
+    :return:
+    """
     datasets = {
         'shoppers': shoppers.Shoppers
     }
 
     return datasets[dataSetName]()
+
+

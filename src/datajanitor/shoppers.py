@@ -16,11 +16,14 @@ class Shoppers(datajanitor.DataJanitor):
             self.df.drop(labels=['ExitRates'], inplace=True)
 
         # Encode categorical/boolean columns
-        for col in ['Browser', 'Region', 'TrafficType',
+        for col in ['Browser', 'Region', 'TrafficType', 'OperatingSystems',
                     'VisitorType', 'Month']:
             self.df[col] = self.df[col].astype('category')
         self.df.Revenue = self.df.Revenue.astype('uint8')
         self.df.Weekend = self.df.Weekend.astype('uint8')
+
+        # Store label column
+        self.label = 'Revenue'
 
         # save reference to numeric/categorical columns for scaling
         self.numericCols = self.df.select_dtypes(
@@ -31,6 +34,7 @@ class Shoppers(datajanitor.DataJanitor):
         df_encoded = pd.get_dummies(self.df,
                                     columns=list(self.categoricalCols),
                                     drop_first=doOHE)
-        df_encoded.drop(axis=1, columns=['Revenue', 'Weekend'], inplace=True)
-        self.df = pd.concat([self.df, df_encoded], axis=1)
-        self.df.drop(self.categoricalCols, axis=1, inplace=True)
+        # df_encoded.drop(axis=1, columns=['Revenue', 'Weekend'], inplace=True)
+        # self.df = pd.concat([self.df, df_encoded], axis=1)
+        # self.df.drop(self.categoricalCols, axis=1, inplace=True)
+        self.df = df_encoded
