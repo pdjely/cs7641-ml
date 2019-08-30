@@ -1,7 +1,10 @@
 import datajanitor
 import A1
+import util
+
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
+from sklearn.model_selection import learning_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline, make_pipeline
 import matplotlib.pyplot as plt
@@ -17,20 +20,40 @@ shoppers.getData(doOHE=True)
 shoppersTrainX, shoppersTestX, shoppersTrainY, shoppersTestY = \
     shoppers.partitionData(scale=True)
 
-# Fit an SVM
-# Adapted from sklearn example:
-# https://scikit-learn.org/stable/auto_examples/svm/plot_svm_scale_c.html#sphx-glr-auto-examples-svm-plot-svm-scale-c-py
-svm, svmParams = A1.getClfParams('kernelSVM')
+# Set which classifiers to use
+# TODO: get list from command-line
+classifiers = ['knn']
 
-print('Tuning hyperparameters')
-# TODO: should parameterize scoring, n_jobs, and cv number
-svmCV = GridSearchCV(svm, svmParams, scoring='f1_weighted', n_jobs=None, cv=5)
-svmCV.fit(shoppersTrainX, shoppersTrainY)
+# ============ GRID SEARCH ================================================= #
 
-print("Best parameters set found on development set:")
-print(svmCV.best_params_)
+# Train classifier sequentially
+for classifier in classifiers:
+    print('--- Tuning {} classifier ---'.format(classifier))
+    clf, clfParams, scoring = A1.getClfParams(classifier)
+    print('Performing grid search over following parameters:\n{}\n'
+          .format(clfParams))
 
-yPred = svmCV.predict(shoppersTestX)
-print(classification_report(shoppersTestY, yPred))
+    clfCV = GridSearchCV(clf, clfParams, scoring=scoring, cv=5)
+    clfCV.fit(shoppersTrainX, shoppersTrainY)
+
+    print('Best parameters found:')
+    best = clfCV.best_params_
+    print(best)
+
+    print('Performance on test dataset:')
+    yPred = clfCV.predict(shoppersTestX)
+    print(classification_report(shoppersTestY, yPred))
+
+    print('Generating learning curves')
+    clfBest, _, _ = A1.getClfParams(classifier, **best)
+    train_sizes, train_scores, valid_scored = learning_curve(
+        clfBest, shoppersTrainX, shoppersTrainY, cv=5, scoring=scoring
+    )
+
+    util.plot_learning_curve('Learning Curve',
+                             train_sizes,
+                             train_scores,
+                             valid_scored)
 
 # Generate learning curve and ROC AUC
+
