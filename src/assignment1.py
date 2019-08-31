@@ -22,7 +22,7 @@ shoppersTrainX, shoppersTestX, shoppersTrainY, shoppersTestY = \
 
 # Set which classifiers to use
 # TODO: get list from command-line
-classifiers = ['knn']
+classifiers = ['ann']
 
 # ============ GRID SEARCH ================================================= #
 
