@@ -11,6 +11,4 @@ def SVM(pipe=False, **kwargs):
         prefix + 'kernel': ['rbf']
     }
 
-    scoring = 'f1_weighted'
-
-    return svm, gridParams, scoring
+    return svm, gridParams

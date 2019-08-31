@@ -12,6 +12,4 @@ def KNN(pipe=False, **kwargs):
         prefix + 'leaf_size': [30]
     }
 
-    scoring = 'f1_weighted'
-
-    return knn, params, scoring
+    return knn, params

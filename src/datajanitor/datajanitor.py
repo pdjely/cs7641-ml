@@ -24,6 +24,7 @@ class DataJanitor:
         self.numericCols = None
         self.label = None
         self.df = None  # raw pandas dataframe
+        self.scoring = 'accuracy'
 
     def getData(self, **kwargs):
         # Download file (if necessary), format it, convert to csv
@@ -100,3 +101,6 @@ class DataJanitor:
                                    format(totalWritten, totalSize)))
             else:
                 print('{} saved to local datastore'.format(self.filename))
+
+    def getScorer(self):
+        return self.scoring

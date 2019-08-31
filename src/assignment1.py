@@ -10,50 +10,58 @@ from sklearn.pipeline import Pipeline, make_pipeline
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import joblib
 
 
-# Get the datasets and do basic data cleaning
-shoppers = datajanitor.getDataset('shoppers')
-shoppers.getData(doOHE=True)
+def gridSearch(classifiers, dataset):
+    X, testX, y, testy = dataset.partitionData(scale=True)
+    # Train all classifiers sequentially
+    print('Dataset uses {} scorer by default'.format(dataset.scoring))
+    bestParams = []
+    for classifier in classifiers:
+        print('--- Tuning {} classifier ---'.format(classifier))
+        clf, clfParams = A1.getClfParams(classifier)
+        scoring = shoppers.getScorer()
+        print('Performing grid search over following parameters:\n{}\n'
+              .format(clfParams))
 
-# Partition and transform the dataset
-shoppersTrainX, shoppersTestX, shoppersTrainY, shoppersTestY = \
-    shoppers.partitionData(scale=True)
+        clfCV = GridSearchCV(clf, clfParams, scoring=scoring, cv=5)
+        clfCV.fit(X, y)
 
-# Set which classifiers to use
-# TODO: get list from command-line
-classifiers = ['ann']
+        print('Best parameters found:')
+        best = clfCV.best_params_
+        print(best)
+        # save best parameters (not classifier object)
+        joblib.dump(best, 'models/{}.dat'.format(classifier))
+        bestParams.append(best)
 
-# ============ GRID SEARCH ================================================= #
+        print('Performance on test dataset:')
+        yPred = clfCV.predict(testX)
+        print(classification_report(testy, yPred))
 
-# Train classifier sequentially
-for classifier in classifiers:
-    print('--- Tuning {} classifier ---'.format(classifier))
-    clf, clfParams, scoring = A1.getClfParams(classifier)
-    print('Performing grid search over following parameters:\n{}\n'
-          .format(clfParams))
+        print('Generating learning curves')
+        clfBest, _ = A1.getClfParams(classifier, **best)
+        train_sizes, train_scores, valid_scored = learning_curve(
+            clfBest, X, y, cv=5, scoring=scoring
+        )
 
-    clfCV = GridSearchCV(clf, clfParams, scoring=scoring, cv=5)
-    clfCV.fit(shoppersTrainX, shoppersTrainY)
+        util.plot_learning_curve('Learning Curve',
+                                 train_sizes,
+                                 train_scores,
+                                 valid_scored)
 
-    print('Best parameters found:')
-    best = clfCV.best_params_
-    print(best)
+        # ROC AUC
+        return {k: v for k, v in zip(classifiers, bestParams)}
 
-    print('Performance on test dataset:')
-    yPred = clfCV.predict(shoppersTestX)
-    print(classification_report(shoppersTestY, yPred))
 
-    print('Generating learning curves')
-    clfBest, _, _ = A1.getClfParams(classifier, **best)
-    train_sizes, train_scores, valid_scored = learning_curve(
-        clfBest, shoppersTrainX, shoppersTrainY, cv=5, scoring=scoring
-    )
+if __name__ == '__main__':
+    # Get the datasets and do basic data cleaning
+    shoppers = datajanitor.getDataset('shoppers')
+    shoppers.getData(doOHE=True)
 
-    util.plot_learning_curve('Learning Curve',
-                             train_sizes,
-                             train_scores,
-                             valid_scored)
+    # Set which classifiers to use
+    # TODO: get list from command-line
+    classifiers = ['dt']
 
-# Generate learning curve and ROC AUC
+    print(gridSearch(classifiers, shoppers))
 
