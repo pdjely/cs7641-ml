@@ -8,7 +8,7 @@ def SVM(pipe=False, **kwargs):
     gridParams = {
         prefix + 'C': [0.5, 1, 1.25],
         prefix + 'gamma': [0.0001, 0.001, 0.01, 0.1],
-        prefix + 'kernel': ['rbf']
+        prefix + 'kernel': ['rbf', 'linear']
     }
 
     return svm, gridParams

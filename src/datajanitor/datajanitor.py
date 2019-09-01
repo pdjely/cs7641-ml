@@ -12,6 +12,7 @@ class DataJanitor:
     """
     def __init__(self,
                  name='uninitialized',
+                 randomState=None,
                  dataUrl=None,
                  filename=None):
         self.name = name
@@ -24,6 +25,7 @@ class DataJanitor:
         self.numericCols = None
         self.label = None
         self.df = None  # raw pandas dataframe
+        self.randomState = randomState
         self.scoring = 'accuracy'
 
     def getData(self, **kwargs):
@@ -52,7 +54,9 @@ class DataJanitor:
         trainx, testx, trainy, testy = \
             train_test_split(self.df.drop(self.label, axis=1),
                              self.df[self.label],
-                             test_size=percent)
+                             test_size=percent,
+                             random_state=self.randomState,
+                             stratify=self.df[self.label])
 
         for df in [trainx, testx, trainy, testy]:
             df.reset_index(inplace=True, drop=True)

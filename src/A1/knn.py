@@ -7,7 +7,7 @@ def KNN(pipe=False, **kwargs):
 
     params = {
         prefix + 'n_neighbors': [5, 10],
-        prefix + 'weights': ['distance'],
+        prefix + 'weights': ['distance', 'uniform'],
         prefix + 'algorithm': ['ball_tree', 'kd_tree'],
         prefix + 'leaf_size': [30]
     }

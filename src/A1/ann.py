@@ -6,10 +6,13 @@ def ANN(pipe=False, verbose=True, **kwargs):
     prefix = 'mlpclassifier__' if pipe else ''
 
     params = {
-        prefix + 'hidden_layer_sizes': [(50,), (100,)],
-        prefix + 'activation': ['relu'],
-        prefix + 'alpha': [0.0001],
-        prefix + 'learning_rate_init': [0.1],
-        prefix + 'solver': ['sgd']
+        prefix + 'hidden_layer_sizes': [(100,)],
+        prefix + 'activation': ['relu', 'tanh'],
+        prefix + 'alpha': [0.0001, 0.001],
+        prefix + 'learning_rate_init': [0.1, 0.01, 0.001],
+        prefix + 'solver': ['sgd'],
+        prefix + 'beta1': [0.8, 0.9],
+        prefix + 'beta2': [0.9, 0.99],
+        prefix + 'epsilon': [1e-8]
     }
     return ann, params
