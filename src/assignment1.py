@@ -30,7 +30,7 @@ def main():
 
     # Set which classifiers to use
     # TODO: get list from command-line
-    classifiers = ['dt']
+    classifiers = ['ann', 'dt', 'adaboost', 'knn', 'kernelSVM']
 
     # Phase 1: Grid search over most paramters to find initial optimal settings
     params = gridSearch(classifiers, X, y, shoppers.scoring)
