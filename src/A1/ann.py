@@ -11,8 +11,8 @@ def ANN(pipe=False, verbose=True, **kwargs):
         prefix + 'alpha': [0.0001, 0.001],
         prefix + 'learning_rate_init': [0.1, 0.01, 0.001],
         prefix + 'solver': ['sgd'],
-        prefix + 'beta1': [0.8, 0.9],
-        prefix + 'beta2': [0.9, 0.99],
+        prefix + 'beta_1': [0.8, 0.9],
+        prefix + 'beta_2': [0.9, 0.99],
         prefix + 'epsilon': [1e-8]
     }
     return ann, params
