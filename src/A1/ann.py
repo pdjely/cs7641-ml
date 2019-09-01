@@ -1,7 +1,7 @@
 from sklearn.neural_network import MLPClassifier
 
 
-def ANN(pipe=False, verbose=True, **kwargs):
+def ANN(pipe=False, verbose=False, **kwargs):
     ann = MLPClassifier(verbose=verbose, **kwargs)
     prefix = 'mlpclassifier__' if pipe else ''
 
