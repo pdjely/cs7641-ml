@@ -16,7 +16,7 @@ import joblib
 
 def main():
     # Get the datasets and do basic data cleaning
-    shoppers = datajanitor.getDataset('shoppers')
+    shoppers = datajanitor.getDataset('adult')
     shoppers.getData(doOHE=True)
     trainX, testX, trainy, testy = shoppers.partitionData(scale=True,
                                                           percent=0.2)

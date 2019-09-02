@@ -9,7 +9,8 @@ def getDataset(dataSetName, randomState=1):
     :return:
     """
     datasets = {
-        'shoppers': shoppers.Shoppers
+        'shoppers': shoppers.Shoppers,
+        'adult': adult.Adult
     }
 
     return datasets[dataSetName](randomState=randomState)

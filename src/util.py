@@ -4,9 +4,6 @@ Utility functions for plotting learner results
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
-from sklearn.datasets import load_digits
 from sklearn.model_selection import learning_curve
 from sklearn.model_selection import ShuffleSplit
 
@@ -49,6 +46,8 @@ def plot_learning_curve(title,
           - An iterable yielding (train, test) splits as arrays of indices.
 
         For integer/None inputs, if ``y`` is binary or multiclass,
+        :param test_scores:
+        :param title:
         :param train_sizes:
         :param train_scores:
         :class:`StratifiedKFold` used. If the estimator is not a classifier

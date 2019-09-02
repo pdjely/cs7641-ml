@@ -16,8 +16,8 @@ class Shoppers(datajanitor.DataJanitor):
 
         # EDA shows high correlation between ExitRate and BounceRates
         # Drop ExitRate
-        if keepCorr:
-            self.df.drop(labels=['ExitRates'], inplace=True)
+        if not keepCorr:
+            self.df.drop(labels=['ExitRates'], axis=1, inplace=True)
 
         # Encode categorical/boolean columns
         for col in ['Browser', 'Region', 'TrafficType', 'OperatingSystems',

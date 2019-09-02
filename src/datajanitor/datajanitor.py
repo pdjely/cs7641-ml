@@ -21,6 +21,8 @@ class DataJanitor:
                                           'datastore')
         self.filename = filename
         self.fullFilePath = os.path.join(self.filestorePath, self.filename)
+
+        # These need to be set in subclasses
         self.categoricalCols = None
         self.numericCols = None
         self.label = None
