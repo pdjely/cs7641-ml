@@ -1,17 +1,18 @@
 """
 Utility functions for plotting learner results
 """
+import A1
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.model_selection import learning_curve
-from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import learning_curve, validation_curve
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report
+import joblib
 
 
-def plot_learning_curve(title,
-                        train_sizes,
-                        train_scores,
-                        test_scores):
+def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5):
+
     """
     Generate a simple plot of the test and training learning curve.
 
@@ -20,7 +21,7 @@ def plot_learning_curve(title,
 
     Parameters
     ----------
-    estimator : object type that implements the "fit" and "predict" methods
+    clf : object type that implements the "fit" and "predict" methods
         An object of that type which is cloned for each validation.
 
     title : string
@@ -46,34 +47,25 @@ def plot_learning_curve(title,
           - An iterable yielding (train, test) splits as arrays of indices.
 
         For integer/None inputs, if ``y`` is binary or multiclass,
-        :param test_scores:
+        :param savedir:
+        :param X:
+        :param y:
+        :param scoring:
+        :param cv:
+        :param clf:
         :param title:
-        :param train_sizes:
-        :param train_scores:
         :class:`StratifiedKFold` used. If the estimator is not a classifier
         or if ``y`` is neither binary nor multiclass, :class:`KFold` is used.
 
         Refer :ref:`User Guide <cross_validation>` for the various
         cross-validators that can be used here.
-
-    n_jobs : int or None, optional (default=None)
-        Number of jobs to run in parallel.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See :term:`Glossary <n_jobs>`
-        for more details.
-
-    train_sizes : array-like, shape (n_ticks,), dtype float or int
-        Relative or absolute numbers of training examples that will be used to
-        generate the learning curve. If the dtype is float, it is regarded as a
-        fraction of the maximum size of the training set (that is determined
-        by the selected validation method), i.e. it has to be within (0, 1].
-        Otherwise it is interpreted as absolute sizes of the training sets.
-        Note that for classification the number of samples usually have to
-        be big enough to contain at least one sample from each class.
-        (default: np.linspace(0.1, 1.0, 5))
     """
+    train_sizes, train_scores, test_scores = learning_curve(
+        clf, X, y, cv=cv, scoring=scoring
+    )
+
     plt.figure()
-    plt.title(title)
+    plt.title('Learning Curve ({})'.format(title))
     plt.xlabel("Training examples")
     plt.ylabel("Score")
     train_scores_mean = np.mean(train_scores, axis=1)
@@ -93,4 +85,81 @@ def plot_learning_curve(title,
              label="Cross-validation score")
 
     plt.legend(loc="best")
+
+    plt.savefig('{}/{}-lc.png'.format(savedir, title))
     return plt
+
+
+def plotValidationCurve(clf, X, y, scoring, paramName,
+                        paramRange, savedir, clfName, cv=5):
+    trainScores, testScores = validation_curve(
+        clf,
+        X, y,
+        param_name=paramName,
+        param_range=paramRange,
+        cv=cv,
+        scoring=scoring
+    )
+    train_scores_mean = np.mean(trainScores, axis=1)
+    train_scores_std = np.std(trainScores, axis=1)
+    test_scores_mean = np.mean(testScores, axis=1)
+    test_scores_std = np.std(testScores, axis=1)
+
+    plt.figure()
+    plt.title('Validation Curve ({})'.format(paramName))
+    plt.xlabel(paramName)
+    plt.ylabel("Score")
+    plt.ylim(0.6, 1.1)
+    lw = 2
+    plt.semilogx(paramRange, train_scores_mean, label="Training score",
+                 color="darkorange", lw=lw)
+    plt.fill_between(paramRange, train_scores_mean - train_scores_std,
+                     train_scores_mean + train_scores_std, alpha=0.2,
+                     color="darkorange", lw=lw)
+    plt.semilogx(paramRange, test_scores_mean, label="Cross-validation score",
+                 color="navy", lw=lw)
+    plt.fill_between(paramRange, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.2,
+                     color="navy", lw=lw)
+    plt.legend(loc="best")
+    plt.savefig('{}/vc_{}_{}.png'.format(savedir, clfName, paramName))
+
+
+def gridSearch(classifiers, X, y, scoring):
+    # Train all classifiers sequentially
+    print('Dataset uses {} scorer by default'.format(scoring))
+    bestParams = []
+    for classifier in classifiers:
+        print('--- Tuning {} classifier ---'.format(classifier))
+        clf, clfParams = A1.getClfParams(classifier)
+        print('Performing grid search over following parameters:\n{}\n'
+              .format(clfParams))
+        clfCV = GridSearchCV(clf, clfParams, scoring=scoring, cv=5)
+        clfCV.fit(X, y)
+
+        print('Best parameters found:')
+        best = clfCV.best_params_
+        print(best)
+        # save best parameters (not classifier object)
+        joblib.dump(best, 'models/{}_params.dat'.format(classifier))
+        bestParams.append(best)
+
+    return {k: v for k, v in zip(classifiers, bestParams)}
+
+
+def scoreClassifier(modelName, clf, X, y, scoring):
+    """
+    Standardized scoring metrics. Assumes a fitted classifier.
+
+    :param modelName:
+    :param clf:
+    :param X:
+    :param y:
+    :param scoring:
+    :return:
+    """
+    print('Scoring performance of {} model:'.format(modelName))
+    yPred = clf.predict(X)
+    print(classification_report(y, yPred))
+
+
