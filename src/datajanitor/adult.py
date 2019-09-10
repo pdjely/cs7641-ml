@@ -1,5 +1,7 @@
 from . import datajanitor
 import pandas as pd
+from sklearn.metrics import make_scorer, cohen_kappa_score
+from sklearn.utils import compute_sample_weight
 
 
 class Adult(datajanitor.DataJanitor):
@@ -11,13 +13,14 @@ class Adult(datajanitor.DataJanitor):
 
     https://archive.ics.uci.edu/ml/datasets/Adult
     """
-    def __init__(self, randomState):
+    def __init__(self, randomState, scaleType):
         url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data'
         super().__init__(name='adult',
                          dataUrl=url,
                          randomState=randomState,
-                         filename='adult.data')
-        self.scoring = 'f1_weighted'
+                         filename='adult.data',
+                         scaleType=scaleType)
+        self.scoring = 'balanced_accuracy'
 
     def formatData(self, keepCorr=False, doOHE=False, **kwargs):
         """

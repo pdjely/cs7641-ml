@@ -14,6 +14,7 @@ def ANN(pipe=False, verbose=False, **kwargs):
         prefix + 'beta_1': [0.8, 0.9],
         prefix + 'beta_2': [0.9, 0.99],
         prefix + 'epsilon': [1e-8],
-        prefix + 'max_iter': [500]
+        prefix + 'max_iter': [300],
+        prefix + 'random_state': [1]
     }
     return ann, params

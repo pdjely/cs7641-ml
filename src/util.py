@@ -2,7 +2,6 @@
 Utility functions for plotting learner results
 """
 import A1
-
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve, validation_curve
@@ -11,7 +10,7 @@ from sklearn.metrics import classification_report
 import joblib
 
 
-def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5):
+def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5, scoreType=''):
 
     """
     Generate a simple plot of the test and training learning curve.
@@ -47,6 +46,7 @@ def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5):
           - An iterable yielding (train, test) splits as arrays of indices.
 
         For integer/None inputs, if ``y`` is binary or multiclass,
+        :param scoreType:
         :param savedir:
         :param X:
         :param y:
@@ -86,12 +86,14 @@ def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5):
 
     plt.legend(loc="best")
 
-    plt.savefig('{}/{}-lc.png'.format(savedir, title))
+    if savedir is not None:
+        plt.savefig('{}/{}-{}-lc.png'.format(savedir, title, scoreType))
     return plt
 
 
 def plotValidationCurve(clf, X, y, scoring, paramName,
-                        paramRange, savedir, clfName, cv=5):
+                        paramRange, savedir, clfName,
+                        xlabel=None, xrange=None, cv=5):
     trainScores, testScores = validation_curve(
         clf,
         X, y,
@@ -104,25 +106,29 @@ def plotValidationCurve(clf, X, y, scoring, paramName,
     train_scores_std = np.std(trainScores, axis=1)
     test_scores_mean = np.mean(testScores, axis=1)
     test_scores_std = np.std(testScores, axis=1)
+    paramName = paramName if xlabel is None else xlabel
+    paramRange = paramRange if xrange is None else xrange
 
     plt.figure()
-    plt.title('Validation Curve ({})'.format(paramName))
-    plt.xlabel(paramName)
-    plt.ylabel("Score")
+    plt.title('Validation Curve ({})'.format(clfName))
+    plt.xlabel(xlabel)
+    plt.ylabel('Score')
     plt.ylim(0.6, 1.1)
     lw = 2
-    plt.semilogx(paramRange, train_scores_mean, label="Training score",
-                 color="darkorange", lw=lw)
+    plt.plot(paramRange, train_scores_mean, label="Training score",
+             color="darkorange", lw=lw)
     plt.fill_between(paramRange, train_scores_mean - train_scores_std,
                      train_scores_mean + train_scores_std, alpha=0.2,
                      color="darkorange", lw=lw)
-    plt.semilogx(paramRange, test_scores_mean, label="Cross-validation score",
-                 color="navy", lw=lw)
+    plt.plot(paramRange, test_scores_mean, label="Cross-validation score",
+             color="navy", lw=lw)
     plt.fill_between(paramRange, test_scores_mean - test_scores_std,
                      test_scores_mean + test_scores_std, alpha=0.2,
                      color="navy", lw=lw)
     plt.legend(loc="best")
-    plt.savefig('{}/vc_{}_{}.png'.format(savedir, clfName, paramName))
+    if savedir is not None:
+        plt.savefig('{}/vc_{}_{}.png'.format(savedir, clfName, paramName))
+    return plt
 
 
 def gridSearch(classifiers, X, y, scoring):

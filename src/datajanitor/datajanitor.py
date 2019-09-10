@@ -3,6 +3,7 @@ import os
 import tqdm
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from .binscaler import BinScaler
 
 
@@ -14,13 +15,16 @@ class DataJanitor:
                  name='uninitialized',
                  randomState=None,
                  dataUrl=None,
-                 filename=None):
+                 filename=None,
+                 scaleType='numeric'):
         self.name = name
         self.dataUrl = dataUrl
         self.filestorePath = os.path.join(os.path.dirname(__file__),
                                           'datastore')
         self.filename = filename
         self.fullFilePath = os.path.join(self.filestorePath, self.filename)
+        self.scaler = None
+        self.scaleType = scaleType
 
         # These need to be set in subclasses
         self.categoricalCols = None
@@ -48,7 +52,7 @@ class DataJanitor:
 
     def partitionData(self, percent=0.3, scale=True):
         """
-        Split dataset into train and test
+        Split dataset into train and cross validation sets
         :param percent: percent of examples for test set
         :param scale: scale numeric columns
         :return: train_x, test_x, train_y, test_y
@@ -57,6 +61,7 @@ class DataJanitor:
             train_test_split(self.df.drop(self.label, axis=1),
                              self.df[self.label],
                              test_size=percent,
+                             shuffle=True,
                              random_state=self.randomState,
                              stratify=self.df[self.label])
 
@@ -65,9 +70,10 @@ class DataJanitor:
             # df.drop('index', axis=1, inplace=True)
 
         if scale:
-            scaler = BinScaler(self.numericCols)
-            trainx = scaler.fit_transform(trainx)
-            testx = scaler.transform(testx)
+            if self.scaler is None:
+                self.initScaler()
+            trainx = self.scaler.fit_transform(trainx)
+            testx = self.scaler.transform(testx)
 
         return trainx, testx, trainy, testy
 
@@ -110,3 +116,22 @@ class DataJanitor:
 
     def getScorer(self):
         return self.scoring
+
+    def initScaler(self):
+        if self.scaleType == 'numeric':
+            self.scaler = BinScaler(self.numericCols)
+        else:
+            self.scaler = StandardScaler()
+
+    def fitScaler(self, X):
+        if self.scaler is None:
+            self.initScaler()
+
+        self.scaler.fit(self, X)
+
+    def scale(self, X):
+        if self.scaler is None:
+            self.initScaler()
+            self.fitScaler(X)
+
+        return self.scaler.transform(X)
