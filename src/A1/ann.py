@@ -2,9 +2,17 @@ from sklearn.neural_network import MLPClassifier
 
 
 def ANN(pipe=False, verbose=False, **kwargs):
-    ann = MLPClassifier(verbose=verbose, **kwargs)
+    ann = MLPClassifier(activation='relu',
+                        solver='adam',
+                        verbose=verbose,
+                        early_stopping=True,
+                        shuffle=True,
+                        random_state=1,
+                        max_iter=5000,
+                        **kwargs)
     prefix = 'mlpclassifier__' if pipe else ''
 
+    # Used for fine-tuning model based on validation curves
     params = {
         prefix + 'hidden_layer_sizes': [(100,)],
         prefix + 'activation': ['relu', 'tanh'],

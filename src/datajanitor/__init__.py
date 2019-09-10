@@ -13,6 +13,6 @@ def getDataset(dataSetName, randomState=1):
         'adult': adult.Adult
     }
 
-    return datasets[dataSetName](randomState=randomState, scaleType='all')
+    return datasets[dataSetName]()
 
 

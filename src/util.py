@@ -7,11 +7,12 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 import joblib
 
 
 def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5, scoreType=''):
-
     """
     Generate a simple plot of the test and training learning curve.
 
@@ -61,7 +62,12 @@ def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5, scoreType=''):
         cross-validators that can be used here.
     """
     train_sizes, train_scores, test_scores = learning_curve(
-        clf, X, y, cv=cv, scoring=scoring
+        Pipeline([
+            ('scale', StandardScaler()),
+            ('classifier', clf)
+        ]),
+        X, y, cv=cv,
+        scoring=scoring
     )
 
     plt.figure()
@@ -95,9 +101,12 @@ def plotValidationCurve(clf, X, y, scoring, paramName,
                         paramRange, savedir, clfName,
                         xlabel=None, xrange=None, cv=5):
     trainScores, testScores = validation_curve(
-        clf,
+        Pipeline([
+            ('scale', StandardScaler()),
+            ('classifier', clf)
+        ]),
         X, y,
-        param_name=paramName,
+        param_name='classifier__' + paramName,
         param_range=paramRange,
         cv=cv,
         scoring=scoring

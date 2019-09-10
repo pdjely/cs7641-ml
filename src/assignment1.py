@@ -1,7 +1,6 @@
 import datajanitor
 import A1
 import util
-from sklearn.model_selection import train_test_split
 import argparse
 import joblib
 import datetime
@@ -22,46 +21,21 @@ def main():
     # (50/50) into a grid search training set and validation set for
     # model complexity analysis
     for dataset in datasets:
-        print('===== Dataset: {} ====='.format(dataset.name))
+        print('\n\n======= Dataset: {} =======\n'.format(dataset.name))
         outputDir = '{}/{}'.format(baseoutDir, dataset.name)
         os.makedirs(outputDir, exist_ok=True)
         # This is not optimal since we're scaling our validation set also
         # but letting it slide to reduce some book keeping
-        trainX, testX, trainy, testy = dataset.partitionData(percent=0.3)
+        trainX, testX, trainy, testy = dataset.partitionData(percent=0.3, randomState=1)
 
-        # If doing initial grid search, divide training 50/50 into train/validation
-        # otherwise just set 20% of total aside for model cross validation
-        splitVal = 0.5 if 'grid' in args.phases else 0.25
-        gridX, valX, gridy, valy = train_test_split(trainX, trainy,
-                                                    test_size=splitVal,
-                                                    random_state=1,
-                                                    shuffle=True,
-                                                    stratify=trainy)
-
-        # Phase 1: Grid search over most parameters to find initial optimal settings
-        # these are considered 'universal' (and time-consuming to run), so these
-        # are saved in a standard directory for later use
-        if 'grid' in args.phases:
-            params = util.gridSearch(classifiers, gridX, gridy, dataset.scoring)
-        else:
-            print('Skipping gridsearch. Loading parameters from /models...')
-            params = openSavedParams(classifiers)
-
-        # Generate baseline scores on the test set for found initial parameters
-        # from grid search and get learning curves.
-        if 'baseline' in args.phases:
-            scoreModel(classifiers, params, trainX, trainy,
-                       testX, testy, dataset.scoring, outputDir)
-
-        # Phase 2: Model complexity analysis--tune two hyperparameters
-        # and show validation curves
+        # Phase 1: Initial model complexity analysis
+        # identify hyperparameters that have some reasonable effect
         if 'mca' in args.phases:
-            tuneModel(classifiers=classifiers,
-                      params=params,
-                      X=gridX,
-                      y=gridy,
-                      scoring=dataset.scoring,
-                      savedir=outputDir)
+            initialMCA(classifiers=classifiers,
+                       X=trainX,
+                       y=trainy,
+                       scoring=dataset.scoring,
+                       savedir=outputDir)
 
 
 def scoreModel(classifiers, params, X, y, testX, testy, scoring,
@@ -82,7 +56,7 @@ def scoreModel(classifiers, params, X, y, testX, testy, scoring,
                              testy, scoring=scoring)
 
 
-def tuneModel(classifiers, params, X, y, scoring, savedir):
+def initialMCA(classifiers, X, y, scoring, savedir):
     tuningParams = {
         'kernelSVM': [['C', np.linspace(0.001, 10, 10)],
                       ['gamma', np.logspace(-5, 0, 10)]],
@@ -106,13 +80,8 @@ def tuneModel(classifiers, params, X, y, scoring, savedir):
 
     for classifier in classifiers:
         valclf, _ = A1.getClfParams(classifier)
-        if 'ann' in params.keys():
-            params['ann']['activation'] = 'relu'
-            params['ann']['solver'] = 'adam'
-        # valclf.set_params(**params[classifier])
 
         print('-----Model Complexity Analysis-----')
-        print('Using set parameters:\n{}'.format(params))
 
         for p in tuningParams[classifier]:
             # Fix ANN parameters

@@ -13,12 +13,11 @@ class Adult(datajanitor.DataJanitor):
 
     https://archive.ics.uci.edu/ml/datasets/Adult
     """
-    def __init__(self, scaleType):
+    def __init__(self):
         url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data'
         super().__init__(name='adult',
                          dataUrl=url,
-                         filename='adult.data',
-                         scaleType=scaleType)
+                         filename='adult.data')
         self.scoring = 'balanced_accuracy'
 
     def formatData(self, keepCorr=False, doOHE=False, **kwargs):

@@ -3,12 +3,11 @@ import pandas as pd
 
 
 class Shoppers(datajanitor.DataJanitor):
-    def __init__(self, scaleType):
+    def __init__(self):
         url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/00468/online_shoppers_intention.csv'
         super().__init__(name='shoppers',
                          dataUrl=url,
-                         filename='shoppers.csv',
-                         scaleType=scaleType)
+                         filename='shoppers.csv')
         self.scoring = 'balanced_accuracy'
 
     def formatData(self, keepCorr=False, doOHE=False, **kwargs):
