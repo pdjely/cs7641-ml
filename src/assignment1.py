@@ -17,16 +17,11 @@ def main():
     os.makedirs(baseoutDir, exist_ok=True)
     print('Saving output to output/{}'.format(runName))
 
-    # Do an 80/20 split train/test. Training set will then be split further
-    # (50/50) into a grid search training set and validation set for
-    # model complexity analysis
     for dataset in datasets:
         print('\n\n======= Dataset: {} =======\n'.format(dataset.name))
         outputDir = '{}/{}'.format(baseoutDir, dataset.name)
         os.makedirs(outputDir, exist_ok=True)
-        # This is not optimal since we're scaling our validation set also
-        # but letting it slide to reduce some book keeping
-        trainX, testX, trainy, testy = dataset.partitionData(percent=0.3, randomState=1)
+        trainX, testX, trainy, testy = dataset.partitionData(percent=0.3, randomState=10)
 
         # Phase 1: Initial model complexity analysis
         # identify hyperparameters that have some reasonable effect
@@ -37,6 +32,17 @@ def main():
                        scoring=dataset.scoring,
                        savedir=outputDir)
 
+        # Learning curves
+        params = openSavedParams(classifiers)
+        scoreModel(classifiers,
+                   params,
+                   trainX,
+                   trainy,
+                   testX,
+                   testy,
+                   'f1_weighted',
+                   outputDir=outputDir)
+
 
 def scoreModel(classifiers, params, X, y, testX, testy, scoring,
                outputDir, scoreType='baseline'):
@@ -45,22 +51,22 @@ def scoreModel(classifiers, params, X, y, testX, testy, scoring,
         clf.set_params(**params[classifier])
 
         print('Generating learning curve')
-        util.plot_learning_curve(classifier, clf, X,
-                                 y, scoring,
-                                 savedir=outputDir,
-                                 scoreType=scoreType)
-
-        print('Scoring initial parameters against test set')
-        clf.fit(X, y)
-        util.scoreClassifier(classifier, clf, testX,
-                             testy, scoring=scoring)
+        plt = util.plot_learning_curve(classifier, clf, X,
+                                       y, scoring,
+                                       savedir=outputDir,
+                                       scoreType=scoreType)
+        plt.clf()
+        # print('Scoring initial parameters against test set')
+        # clf.fit(X, y)
+        # util.scoreClassifier(classifier, clf, testX,
+        #                      testy, scoring=scoring)
 
 
 def initialMCA(classifiers, X, y, scoring, savedir):
     tuningParams = {
         'kernelSVM': [['C', np.linspace(0.001, 10, 10)],
                       ['gamma', np.logspace(-5, 0, 10)]],
-        'dt': [['max_depth', range(1, 10, 1)],
+        'dt': [['max_depth', range(1, 15, 1)],
                ['min_samples_split', range(2, 10, 2)],
                ['min_samples_leaf', range(2, 10, 2)],
                ['max_features', np.linspace(0.001, 1., 10)],
@@ -92,7 +98,7 @@ def initialMCA(classifiers, X, y, scoring, savedir):
                 if xlabel == 'hidden units':
                     xrange = [x[0] for x in p[1]]
                 else:
-                    xrange = [1, 2, 3]    # hard code 3 layers
+                    xrange = [1, 2, 3]  # hard code 3 layers
             # DT weights are a dict and need to be converted to range
             if classifier == 'dt' and p[0] == 'class_weight':
                 xrange = range(1, 5)
@@ -115,6 +121,7 @@ def initialMCA(classifiers, X, y, scoring, savedir):
 def finalScore():
     pass
 
+
 # ////////////////////////////////////////////////////////////////////////////
 # ///////////////////////// Program configuration functions //////////////////
 # ////////////////////////////////////////////////////////////////////////////
@@ -129,7 +136,7 @@ def openSavedParams(classifiers):
 
 def openDatasets(names):
     if 'all' in names:
-        selected = ['adult', 'shoppers']
+        selected = ['adult', 'shoppers', 'news']
     else:
         selected = names
     datasets = [datajanitor.getDataset(s) for s in selected]
@@ -161,7 +168,7 @@ def getArgs():
 
     validClassifiers = ['dt', 'ann', 'svm', 'boost', 'knn']
     validPhases = ['grid', 'mca']
-    validData = ['adult', 'shoppers']
+    validData = ['adult', 'shoppers', 'news']
 
     parser.add_argument('-c', '--classifiers',
                         help='Space-separated list of classifiers (default: all)',

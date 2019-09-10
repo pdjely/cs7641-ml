@@ -7,8 +7,9 @@ def ANN(pipe=False, verbose=False, **kwargs):
                         verbose=verbose,
                         early_stopping=True,
                         shuffle=True,
-                        random_state=1,
+                        random_state=10,
                         max_iter=5000,
+                        learning_rate='adaptive',
                         **kwargs)
     prefix = 'mlpclassifier__' if pipe else ''
 

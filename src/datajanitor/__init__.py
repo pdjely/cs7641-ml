@@ -1,4 +1,4 @@
-from . import shoppers, adult
+from . import shoppers, adult, news
 
 
 def getDataset(dataSetName, randomState=1):
@@ -10,7 +10,8 @@ def getDataset(dataSetName, randomState=1):
     """
     datasets = {
         'shoppers': shoppers.Shoppers,
-        'adult': adult.Adult
+        'adult': adult.Adult,
+        'news': news.News
     }
 
     return datasets[dataSetName]()
