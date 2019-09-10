@@ -3,35 +3,35 @@ import os
 import tqdm
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from .binscaler import BinScaler
 
 
 class DataJanitor:
     """
     Base class for retrieving, cleaning, and splitting data sets
+
+    The class will automatically handle splitting the dataset into train,
+    validation, and test sets, along with fitting a scaling classifier
+    to the train set.
     """
     def __init__(self,
                  name='uninitialized',
-                 randomState=None,
                  dataUrl=None,
                  filename=None,
-                 scaleType='numeric'):
+                 **kwargs):
         self.name = name
         self.dataUrl = dataUrl
         self.filestorePath = os.path.join(os.path.dirname(__file__),
                                           'datastore')
         self.filename = filename
         self.fullFilePath = os.path.join(self.filestorePath, self.filename)
-        self.scaler = None
-        self.scaleType = scaleType
+        self.X = None
+        self.y = None
 
         # These need to be set in subclasses
         self.categoricalCols = None
         self.numericCols = None
         self.label = None
         self.df = None  # raw pandas dataframe
-        self.randomState = randomState
         self.scoring = 'accuracy'
 
     def getData(self, **kwargs):
@@ -39,6 +39,11 @@ class DataJanitor:
         if self.df is None:
             self.fetchData()
         self.formatData(**kwargs)
+
+        # dataframe has been loaded and formatted, now save just the
+        # numpy arrays
+        self.X = self.df.drop(self.label, axis=1).values
+        self.y = self.df[self.label].values
 
     def getDataFrame(self, **kwargs):
         """"
@@ -50,30 +55,20 @@ class DataJanitor:
 
         return self.df
 
-    def partitionData(self, percent=0.3, scale=True):
+    def partitionData(self, percent=0.3, randomState=1):
         """
-        Split dataset into train and cross validation sets
-        :param percent: percent of examples for test set
-        :param scale: scale numeric columns
+        Split dataset into train and validation, and test sets
+        :param randomState:
+        :param percent: percent of examples for validation set
         :return: train_x, test_x, train_y, test_y
         """
         trainx, testx, trainy, testy = \
-            train_test_split(self.df.drop(self.label, axis=1),
-                             self.df[self.label],
+            train_test_split(self.X,
+                             self.y,
                              test_size=percent,
                              shuffle=True,
-                             random_state=self.randomState,
+                             random_state=randomState,
                              stratify=self.df[self.label])
-
-        for df in [trainx, testx, trainy, testy]:
-            df.reset_index(inplace=True, drop=True)
-            # df.drop('index', axis=1, inplace=True)
-
-        if scale:
-            if self.scaler is None:
-                self.initScaler()
-            trainx = self.scaler.fit_transform(trainx)
-            testx = self.scaler.transform(testx)
 
         return trainx, testx, trainy, testy
 
@@ -116,22 +111,3 @@ class DataJanitor:
 
     def getScorer(self):
         return self.scoring
-
-    def initScaler(self):
-        if self.scaleType == 'numeric':
-            self.scaler = BinScaler(self.numericCols)
-        else:
-            self.scaler = StandardScaler()
-
-    def fitScaler(self, X):
-        if self.scaler is None:
-            self.initScaler()
-
-        self.scaler.fit(self, X)
-
-    def scale(self, X):
-        if self.scaler is None:
-            self.initScaler()
-            self.fitScaler(X)
-
-        return self.scaler.transform(X)

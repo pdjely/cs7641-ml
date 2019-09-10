@@ -27,8 +27,7 @@ def main():
         os.makedirs(outputDir, exist_ok=True)
         # This is not optimal since we're scaling our validation set also
         # but letting it slide to reduce some book keeping
-        trainX, testX, trainy, testy = dataset.partitionData(scale=True,
-                                                             percent=0.2)
+        trainX, testX, trainy, testy = dataset.partitionData(percent=0.3)
 
         # If doing initial grid search, divide training 50/50 into train/validation
         # otherwise just set 20% of total aside for model cross validation
