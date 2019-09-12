@@ -6,8 +6,8 @@ def SVM(pipe=False, **kwargs):
     prefix = 'svc__' if pipe else ''
 
     gridParams = {
-        prefix + 'C': [0.001, 0.01, 0.1, 1.0, 1.2, 1.5],
-        prefix + 'gamma': [0.001, 0.01, 0.1],
+        prefix + 'C': [0.95, 1.0],
+        prefix + 'gamma': [0.001, 0.01],
         prefix + 'kernel': ['rbf', 'linear']
     }
 
