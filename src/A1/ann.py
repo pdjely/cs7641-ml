@@ -15,15 +15,11 @@ def ANN(pipe=False, verbose=False, **kwargs):
 
     # Used for fine-tuning model based on validation curves
     params = {
-        prefix + 'hidden_layer_sizes': [(100,)],
-        prefix + 'activation': ['relu', 'tanh'],
+        prefix + 'hidden_layer_sizes': [(10,), (20,), (50,),(200,),
+                                        (10, 10), (20, 20), (50, 50),
+                                        (10, 10, 10), (20, 20, 20), (50, 50, 50),
+                                        (200, 200, 200)],
         prefix + 'alpha': [0.0001, 0.001],
-        prefix + 'learning_rate_init': [0.1, 0.01, 0.001],
-        prefix + 'solver': ['sgd', 'adam'],
-        prefix + 'beta_1': [0.8, 0.9],
-        prefix + 'beta_2': [0.9, 0.99],
-        prefix + 'epsilon': [1e-8],
-        prefix + 'max_iter': [300],
-        prefix + 'random_state': [1]
+        prefix + 'solver': ['sgd', 'adam']
     }
     return ann, params

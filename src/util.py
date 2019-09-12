@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.utils.multiclass import unique_labels
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 import joblib
@@ -140,41 +141,113 @@ def plotValidationCurve(clf, X, y, scoring, paramName,
     return plt
 
 
-def gridSearch(classifiers, X, y, scoring):
+def gridSearch(dsName, classifiers, X, y, scoring):
     # Train all classifiers sequentially
-    print('Dataset uses {} scorer by default'.format(scoring))
     bestParams = []
     for classifier in classifiers:
-        print('--- Tuning {} classifier ---'.format(classifier))
         clf, clfParams = A1.getClfParams(classifier)
-        print('Performing grid search over following parameters:\n{}\n'
-              .format(clfParams))
+        print('{}: Performing grid search over following parameters:\n{}\n'
+              .format(classifier, clfParams))
         clfCV = GridSearchCV(clf, clfParams, scoring=scoring, cv=5)
         clfCV.fit(X, y)
 
-        print('Best parameters found:')
+        print('{}: Best parameters found:'.format(classifier))
         best = clfCV.best_params_
         print(best)
         # save best parameters (not classifier object)
-        joblib.dump(best, 'models/{}_params.dat'.format(classifier))
+        joblib.dump(best, 'models/{}_{}_params.dat'.format(dsName, classifier))
         bestParams.append(best)
 
     return {k: v for k, v in zip(classifiers, bestParams)}
 
 
-def scoreClassifier(modelName, clf, X, y, scoring):
+def scoreClassifier(clfName, ytrue, ypred):
     """
     Standardized scoring metrics. Assumes a fitted classifier.
 
-    :param modelName:
-    :param clf:
-    :param X:
-    :param y:
-    :param scoring:
+    :param clfName:
+    :param ypred:
+    :param ytrue:
     :return:
     """
-    print('Scoring performance of {} model:'.format(modelName))
-    yPred = clf.predict(X)
-    print(classification_report(y, yPred))
+    print('Scoring performance of {} model:'.format(clfName))
+    print(classification_report(ytrue, ypred))
 
 
+def plot_confusion_matrix(y_true, y_pred, classes,
+                          normalize=False,
+                          title=None,
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+
+    Stolen word-for-word from SK Learn documentation
+    https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
+    """
+    if not title:
+        if normalize:
+            title = 'Normalized confusion matrix'
+        else:
+            title = 'Confusion matrix, without normalization'
+
+    # Compute confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    # Only use the labels that appear in the data
+    # classes = classes[unique_labels(y_true, y_pred)]
+    classes = ['negative', 'positive']
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    # We want to show all ticks...
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           # ... and label them with the respective list entries
+           xticklabels=classes, yticklabels=classes,
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                    ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+    return ax
+
+
+def confusionMatrix(clfName, ytrue, ypred,
+                    savedir=None,
+                    scoreType='score'):
+    """
+    Create a confusion matrix
+
+    :param clfName: string, name of classifier
+    :param ytrue: np array, ground truth labels
+    :param ypred: np array, predicted values
+    :param savedir: string, path to directory to save figures
+    :param scoreType: string, description of scoring round
+    :return: None
+    """
+    title = 'Confusion Matrix ({}: {})'.format(clfName, scoreType)
+    plot_confusion_matrix(ytrue, ypred, ['negative', 'positive'],
+                          normalize=False,
+                          title=title)
+    if savedir is not None:
+        plt.savefig('{}/{}-{}-cf.png'.format(savedir, clfName, scoreType))

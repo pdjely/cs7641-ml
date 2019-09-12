@@ -7,9 +7,7 @@ def AdaBoost(pipe=False, **kwargs):
     prefix = 'adaboostclassifier__' if pipe else ''
 
     params = {
-        prefix + 'base_estimator': [DecisionTreeClassifier(max_depth=1),
-                                    DecisionTreeClassifier(max_depth=2)],
-        prefix + 'n_estimators': [50],
+        prefix + 'n_estimators': [10, 30, 50, 100, 200, 500],
         prefix + 'learning_rate': [1.2, 1., 0.8]
     }
 

@@ -1,0 +1,40 @@
+from . import datajanitor
+import pandas as pd
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+
+class Cancer(datajanitor.DataJanitor):
+    def __init__(self):
+        super().__init__(name='cancer',
+                         dataUrl='',
+                         filename='')
+        self.scoring = 'f1'
+
+    def getData(self, **kwargs):
+        # Download file (if necessary), format it, convert to csv
+        if self.df is None:
+            self.X, self.y = load_breast_cancer(return_X_y=True)
+            self.df = pd.DataFrame(self.X)
+
+        self.formatData(**kwargs)
+
+    def formatData(self, keepCorr=False, doOHE=False, **kwargs):
+        pass
+
+    def partitionData(self, percent=0.3, randomState=1):
+        """
+        Split dataset into train and validation, and test sets
+        :param randomState:
+        :param percent: percent of examples for validation set
+        :return: train_x, test_x, train_y, test_y
+        """
+        trainx, testx, trainy, testy = \
+            train_test_split(self.X,
+                             self.y,
+                             test_size=percent,
+                             shuffle=True,
+                             random_state=randomState,
+                             stratify=self.y)
+
+        return trainx, testx, trainy, testy

@@ -6,6 +6,7 @@ import joblib
 import datetime
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -32,30 +33,60 @@ def main():
                        scoring=dataset.scoring,
                        savedir=outputDir)
 
-        # Learning curves
-        params = openSavedParams(classifiers)
-        scoreModel(classifiers,
-                   params,
-                   trainX,
-                   trainy,
-                   testX,
-                   testy,
-                   'f1_weighted',
-                   outputDir=outputDir)
+            # Learning curves
+            scoreModel(classifiers,
+                       trainX,
+                       trainy,
+                       testX,
+                       testy,
+                       'f1_weighted',
+                       outputDir=outputDir,
+                       params=None)
+
+        if 'grid' in args.phases:
+            # Grid search over parameters that were found to have some effect
+            # on overall accuracy. Load from default.
+            best_params = util.gridSearch(dataset.name,
+                                          classifiers,
+                                          trainX, trainy,
+                                          dataset.scoring)
+
+            # Learning curves
+            scoreModel(classifiers,
+                       trainX,
+                       trainy,
+                       testX,
+                       testy,
+                       'f1_weighted',
+                       outputDir=outputDir,
+                       params=None,
+                       scoreType='fitted')
 
 
-def scoreModel(classifiers, params, X, y, testX, testy, scoring,
-               outputDir, scoreType='baseline'):
+def scoreModel(classifiers, X, y, testX, testy, scoring,
+               outputDir, params, scoreType='baseline'):
     for classifier in classifiers:
         clf, _ = A1.getClfParams(classifier)
-        clf.set_params(**params[classifier])
+        if params is not None:
+            clf.set_params(**params[classifier])
 
-        print('Generating learning curve')
-        plt = util.plot_learning_curve(classifier, clf, X,
-                                       y, scoring,
-                                       savedir=outputDir,
-                                       scoreType=scoreType)
-        plt.clf()
+        print('{}: Generating {} learning curve'
+              .format(classifier, scoreType))
+        util.plot_learning_curve(classifier, clf, X,
+                                 y, scoring,
+                                 savedir=outputDir,
+                                 scoreType=scoreType)
+
+        # To score the model, fit with given parameters and predict
+        clf.fit(X, y)
+        ypred = clf.predict(testX)
+
+        # Generate confusion matrix
+        util.confusionMatrix(classifier, testy, ypred,
+                             savedir=outputDir,
+                             scoreType=scoreType)
+
+        plt.close('all')
         # print('Scoring initial parameters against test set')
         # clf.fit(X, y)
         # util.scoreClassifier(classifier, clf, testX,
@@ -65,7 +96,7 @@ def scoreModel(classifiers, params, X, y, testX, testy, scoring,
 def initialMCA(classifiers, X, y, scoring, savedir):
     tuningParams = {
         'kernelSVM': [['C', np.linspace(0.001, 10, 10)],
-                      ['gamma', np.logspace(-5, 0, 10)]],
+                      ['gamma', np.logspace(-5, -1, 10)]],
         'dt': [['max_depth', range(1, 15, 1)],
                ['min_samples_split', range(2, 10, 2)],
                ['min_samples_leaf', range(2, 10, 2)],
@@ -87,7 +118,8 @@ def initialMCA(classifiers, X, y, scoring, savedir):
     for classifier in classifiers:
         valclf, _ = A1.getClfParams(classifier)
 
-        print('-----Model Complexity Analysis-----')
+        print('-----Model Complexity Analysis: {}-----'
+              .format(classifier))
 
         for p in tuningParams[classifier]:
             # Fix ANN parameters
@@ -106,16 +138,16 @@ def initialMCA(classifiers, X, y, scoring, savedir):
 
             print('{}: Tuning parameter {} in range {}'
                   .format(classifier, p[0], p[1]))
-            plt = util.plotValidationCurve(valclf, X, y,
-                                           scoring=scoring,
-                                           paramName=p[0],
-                                           paramRange=p[1],
-                                           savedir=savedir,
-                                           clfName=classifier,
-                                           xlabel=xlabel,
-                                           xrange=xrange,
-                                           cv=3)
-            plt.clf()
+            util.plotValidationCurve(valclf, X, y,
+                                     scoring=scoring,
+                                     paramName=p[0],
+                                     paramRange=p[1],
+                                     savedir=savedir,
+                                     clfName=classifier,
+                                     xlabel=xlabel,
+                                     xrange=xrange,
+                                     cv=3)
+            plt.close('all')
 
 
 def finalScore():
@@ -136,7 +168,7 @@ def openSavedParams(classifiers):
 
 def openDatasets(names):
     if 'all' in names:
-        selected = ['adult', 'shoppers', 'news']
+        selected = ['adult', 'shoppers', 'news', 'cancer']
     else:
         selected = names
     datasets = [datajanitor.getDataset(s) for s in selected]
@@ -168,7 +200,7 @@ def getArgs():
 
     validClassifiers = ['dt', 'ann', 'svm', 'boost', 'knn']
     validPhases = ['grid', 'mca']
-    validData = ['adult', 'shoppers', 'news']
+    validData = ['adult', 'shoppers', 'news', 'cancer']
 
     parser.add_argument('-c', '--classifiers',
                         help='Space-separated list of classifiers (default: all)',
