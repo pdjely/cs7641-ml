@@ -8,7 +8,7 @@ from sklearn.model_selection import learning_curve, validation_curve
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.utils.multiclass import unique_labels
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 import joblib
 
@@ -145,10 +145,12 @@ def gridSearch(dsName, classifiers, X, y, scoring):
     # Train all classifiers sequentially
     bestParams = []
     for classifier in classifiers:
-        clf, clfParams = A1.getClfParams(classifier)
+        clf, clfParams = A1.getClfParams(classifier, pipe=True)
         print('{}: Performing grid search over following parameters:\n{}\n'
               .format(classifier, clfParams))
-        clfCV = GridSearchCV(clf, clfParams, scoring=scoring, cv=5)
+        pipeline = Pipeline(steps=[('scaler', StandardScaler()),
+                                        ('classifier', clf)])
+        clfCV = GridSearchCV(pipeline, clfParams, scoring=scoring, cv=5)
         clfCV.fit(X, y)
 
         print('{}: Best parameters found:'.format(classifier))

@@ -3,7 +3,8 @@ from sklearn.svm import SVC
 
 def SVM(pipe=False, **kwargs):
     svm = SVC(**kwargs)
-    prefix = 'svc__' if pipe else ''
+    # prefix = 'svc__' if pipe else ''
+    prefix = 'classifier__' if pipe else ''
 
     gridParams = {
         prefix + 'C': [0.95, 1.0],

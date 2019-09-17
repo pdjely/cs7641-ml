@@ -3,7 +3,8 @@ from sklearn.neighbors import KNeighborsClassifier
 
 def KNN(pipe=False, **kwargs):
     knn = KNeighborsClassifier(**kwargs)
-    prefix = 'knn__' if pipe else ''
+    # prefix = 'knn__' if pipe else ''
+    prefix = 'classifier__' if pipe else ''
 
     params = {
         prefix + 'n_neighbors': [2, 5, 10, 20, 50, 100],

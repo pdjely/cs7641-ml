@@ -7,6 +7,8 @@ import datetime
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 def main():
@@ -39,7 +41,7 @@ def main():
                        trainy,
                        testX,
                        testy,
-                       'f1_weighted',
+                       dataset.scoring,
                        outputDir=outputDir,
                        params=None)
 
@@ -57,7 +59,7 @@ def main():
                        trainy,
                        testX,
                        testy,
-                       'f1_weighted',
+                       dataset.scoring,
                        outputDir=outputDir,
                        params=None,
                        scoreType='fitted')
@@ -78,8 +80,10 @@ def scoreModel(classifiers, X, y, testX, testy, scoring,
                                  scoreType=scoreType)
 
         # To score the model, fit with given parameters and predict
-        clf.fit(X, y)
-        ypred = clf.predict(testX)
+        pipeline = Pipeline(steps=[('scaler', StandardScaler()),
+                                        ('classifier', clf)])
+        pipeline.fit(X, y)
+        ypred = pipeline.predict(testX)
 
         # Generate confusion matrix
         util.confusionMatrix(classifier, testy, ypred,
@@ -87,27 +91,34 @@ def scoreModel(classifiers, X, y, testX, testy, scoring,
                              scoreType=scoreType)
 
         plt.close('all')
-        # print('Scoring initial parameters against test set')
-        # clf.fit(X, y)
-        # util.scoreClassifier(classifier, clf, testX,
-        #                      testy, scoring=scoring)
 
 
 def initialMCA(classifiers, X, y, scoring, savedir):
+    """
+    Run validation curves on every tunable parameter over a small range
+
+    Determine which parameters have effect on the models for the given
+    dataset.
+
+    :param classifiers: list of classifier names
+    :param X: np.array, features
+    :param y: np.array, labels
+    :param scoring: string or sklearn scorer function
+    :param savedir: directory to save charts or None
+    :return:
+    """
     tuningParams = {
-        'kernelSVM': [['C', np.linspace(0.001, 10, 10)],
-                      ['gamma', np.logspace(-5, -1, 10)]],
+        'kernelSVM': [['C', [1.0]],
+                      ['gamma', [0.0001, 0.001]]],
         'dt': [['max_depth', range(1, 15, 1)],
                ['min_samples_split', range(2, 10, 2)],
                ['min_samples_leaf', range(2, 10, 2)],
                ['max_features', np.linspace(0.001, 1., 10)],
                ['max_leaf_nodes', range(2, 10)],
                ['class_weight', [{0: 1 / x, 1: 1. - (1. / x)} for x in range(1, 5)]]],
-        'ann': [['hidden_layer_sizes', [(x,) for x in range(25, 105, 25)]],
-                ['hidden_layer_sizes', [(50,), (50, 50), (50, 50, 50)]],
-                ['alpha', np.logspace(-5, 0, 5)],
-                ['beta_1', [0.5, 0.75, 0.9]],
-                ['learning_rate_init', [0.0001, 0.001, 0.01, 0.1]]],
+        'ann': [['hidden_layer_sizes', [(20,), (20, 20), (20, 20, 20)]],
+                ['alpha', [1.0, 1.1]],
+                ['learning_rate_init', [0.01]]],
         'adaboost': [['n_estimators', range(50, 500, 50)],
                      ['learning_rate', np.logspace(-5, 0, 10)]],
         'knn': [['n_neighbors', range(10, 100, 10)],
