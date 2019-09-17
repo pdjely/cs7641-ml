@@ -1,7 +1,7 @@
 from sklearn.neighbors import KNeighborsClassifier
 
 
-def KNN(pipe=False, **kwargs):
+def KNN(dsname, pipe=False, **kwargs):
     knn = KNeighborsClassifier(**kwargs)
     # prefix = 'knn__' if pipe else ''
     prefix = 'classifier__' if pipe else ''

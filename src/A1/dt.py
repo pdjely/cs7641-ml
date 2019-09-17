@@ -1,7 +1,7 @@
 from sklearn.tree import DecisionTreeClassifier
 
 
-def DT(pipe=False, **kwargs):
+def DT(dsname, pipe=False, **kwargs):
     params = {
         'criterion': ['gini', 'entropy'],
         'max_depth': [2, 4, 8, 16, 32, 64, 128, 256, 512],

@@ -2,7 +2,7 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 
-def AdaBoost(pipe=False, **kwargs):
+def AdaBoost(dsname, pipe=False, **kwargs):
     boost = AdaBoostClassifier(**kwargs)
     # prefix = 'adaboostclassifier__' if pipe else ''
     prefix = 'classifier__' if pipe else ''

@@ -145,11 +145,11 @@ def gridSearch(dsName, classifiers, X, y, scoring):
     # Train all classifiers sequentially
     bestParams = []
     for classifier in classifiers:
-        clf, clfParams = A1.getClfParams(classifier, pipe=True)
-        print('{}: Performing grid search over following parameters:\n{}\n'
+        clf, clfParams = A1.getClfParams(classifier, dsName, pipe=True)
+        print('\n\n{}: Performing grid search over following parameters:\n{}\n'
               .format(classifier, clfParams))
         pipeline = Pipeline(steps=[('scaler', StandardScaler()),
-                                        ('classifier', clf)])
+                                   ('classifier', clf)])
         clfCV = GridSearchCV(pipeline, clfParams, scoring=scoring, cv=5)
         clfCV.fit(X, y)
 

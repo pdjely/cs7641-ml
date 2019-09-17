@@ -5,7 +5,7 @@ from .boost import AdaBoost
 from .dt import DT
 
 
-def getClfParams(clfType, **kwargs):
+def getClfParams(clfType, dsname=None, **kwargs):
 
     classifierGenerator = {
         'kernelSVM': SVM,
@@ -15,4 +15,4 @@ def getClfParams(clfType, **kwargs):
         'dt': DT
     }
 
-    return classifierGenerator[clfType](**kwargs)
+    return classifierGenerator[clfType](dsname=dsname, **kwargs)

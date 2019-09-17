@@ -1,14 +1,13 @@
 from sklearn.neural_network import MLPClassifier
 
 
-def ANN(pipe=False, verbose=False, **kwargs):
-    ann = MLPClassifier(activation='relu',
-                        solver='adam',
+def ANN(dsname, pipe=False, verbose=False, **kwargs):
+    kwargs['max_iter'] = kwargs.get('max_iter', 5000)
+    ann = MLPClassifier(solver='adam',
                         verbose=verbose,
                         early_stopping=True,
                         shuffle=True,
                         random_state=10,
-                        max_iter=5000,
                         learning_rate='adaptive',
                         **kwargs)
     # prefix = 'mlpclassifier__' if pipe else ''

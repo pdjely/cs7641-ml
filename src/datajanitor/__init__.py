@@ -1,4 +1,4 @@
-from . import shoppers, adult, news, cancer
+from . import shoppers, adult, news, cancer, nursery
 
 
 def getDataset(dataSetName, randomState=1):
@@ -12,7 +12,8 @@ def getDataset(dataSetName, randomState=1):
         'shoppers': shoppers.Shoppers,
         'adult': adult.Adult,
         'news': news.News,
-        'cancer': cancer.Cancer
+        'cancer': cancer.Cancer,
+        'nursery': nursery.Nursery
     }
 
     return datasets[dataSetName]()

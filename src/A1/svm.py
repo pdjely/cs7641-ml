@@ -1,7 +1,8 @@
 from sklearn.svm import SVC
 
 
-def SVM(pipe=False, **kwargs):
+def SVM(dsname, pipe=False, **kwargs):
+    kwargs['max_iter'] = kwargs.get('max_iter', 5000)
     svm = SVC(**kwargs)
     # prefix = 'svc__' if pipe else ''
     prefix = 'classifier__' if pipe else ''
@@ -9,7 +10,7 @@ def SVM(pipe=False, **kwargs):
     gridParams = {
         prefix + 'C': [0.95, 1.0],
         prefix + 'gamma': [0.001, 0.01],
-        prefix + 'kernel': ['rbf', 'linear']
+        prefix + 'kernel': ['linear', 'rbf']
     }
 
     return svm, gridParams
