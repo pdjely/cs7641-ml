@@ -54,7 +54,7 @@ def main():
         if 'grid' in args.phases:
             # Grid search over parameters that were found to have some effect
             # on overall accuracy. Load from default.
-            best_params = util.gridSearch(dataset.name,
+            best_params = util.gridSearch(dataset,
                                           classifiers,
                                           trainX, trainy,
                                           dataset.scoring)
@@ -205,7 +205,7 @@ def initialMCA(classifiers, X, y, scoring, savedir):
                 plt.close('all')
 
 
-def finalScore(fittedClassifiers, testX, testy, dsname, outputdir):
+def finalScore(fittedClassifiers, testX, testy, dsname, outputdir, phaseName='final'):
     scores = []
     names = []
     for clfName, clf in fittedClassifiers.items():
@@ -234,7 +234,7 @@ def finalScore(fittedClassifiers, testX, testy, dsname, outputdir):
                 color='white', va='center', fontweight='bold')
 
     if outputdir:
-        plt.savefig('{}/final_comp.png'.format(outputdir))
+        plt.savefig('{}/{}-comp.png'.format(outputdir, phaseName))
 
     print('F1 scores:')
     for n, s in zip(names, scores):
@@ -288,7 +288,7 @@ def getArgs():
 
     validClassifiers = ['dt', 'ann', 'svm', 'boost', 'knn']
     validPhases = ['baseline', 'mca', 'grid', 'compare']
-    validData = ['adult', 'shoppers', 'news', 'cancer']
+    validData = ['adult', 'shoppers', 'news', 'cancer', 'spam', 'musk']
 
     parser.add_argument('-c', '--classifiers',
                         help='Space-separated list of classifiers (default: all)',

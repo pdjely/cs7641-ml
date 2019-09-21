@@ -20,6 +20,29 @@ class Adult(datajanitor.DataJanitor):
                          filename='adult.data')
         self.scoring = 'balanced_accuracy'
 
+        self.gridParams = {
+            'adaboost': {
+                'learning_rate': [0.8, 0.9, 1.0, 1.1, 1.2],
+                'n_estimators': range(50, 300, 50)
+            },
+            'ann': {
+                'alpha': [1e-4, 1e-3, 1e-2, 1e-1],
+                'hidden_units': [(20, 20), (50, 50), (100, 100), (200, 200),
+                                 (20, 20, 20), (50, 50, 50), (300, 200, 100)]
+            },
+            'dt': {
+                'max_depth': range(3, 8),
+                'max_leaf_nodes': range(5, 8)
+            },
+            'kernelSVM': {
+                'C': [0.25, 0.50, 0.75],
+                'gamma': [0.001, 0.01, 0.1]
+            },
+            'knn': {
+                'n_neighbors': [2, 10, 20, 50]
+            }
+        }
+
     def formatData(self, keepCorr=False, doOHE=False, **kwargs):
         """
         Format adult dataset
@@ -74,7 +97,3 @@ class Adult(datajanitor.DataJanitor):
                                     columns=list(self.categoricalCols),
                                     drop_first=doOHE)
         self.df = df_encoded
-
-
-
-

@@ -9,7 +9,29 @@ class Cancer(datajanitor.DataJanitor):
         super().__init__(name='cancer',
                          dataUrl='',
                          filename='')
-        self.scoring = 'f1'
+        self.scoring = 'f1_weighted'
+
+        # very simple dataset so grid params not very thorough
+        self.gridParams = {
+            'adaboost': {
+                'learning_rate': [0.8, 1.2],
+                'n_estimators': range(50, 150, 50)
+            },
+            'ann': {
+                'hidden_units': [(20, 20), (50, 50),
+                                 (20, 20, 20), (50, 50, 50)]
+            },
+            'dt': {
+                'max_depth': range(3, 20, 5)
+            },
+            'kernelSVM': {
+                'C': [0.25, 0.50, 0.75],
+                'gamma': [0.001, 0.01, 0.1]
+            },
+            'knn': {
+                'n_neighbors': [2, 10, 20, 50]
+            }
+        }
 
     def getData(self, **kwargs):
         # Download file (if necessary), format it, convert to csv

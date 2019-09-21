@@ -17,6 +17,28 @@ class News(datajanitor.DataJanitor):
                                     'OnlineNewsPopularity.csv')
         self.scoring = 'balanced_accuracy'
 
+        self.gridParams = {
+            'adaboost': {
+                'learning_rate': [0.6, 1.0, 1.2, 1.5, 2.0]
+            },
+            'ann': {
+                'alpha': [1e-4, 1e-2, 1e-1, 1.0, 1.2],
+                'hidden_units': [(50, 50), (200, 200), (50, 50, 50),
+                                 (300, 200, 100)]
+            },
+            'dt': {
+                'max_depth': range(4, 8),
+                'max_leaf_nodes': range(5, 10)
+            },
+            'kernelSVM': {
+                'C': [1.0, 1.2, 1.5]
+            },
+            'knn': {
+                'n_neighbors': [70, 90, 120, 150],
+                'p': [0.01, 0.1, 1.0]
+            }
+        }
+
     def fetchData(self):
         super().fetchData()
 

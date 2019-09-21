@@ -10,6 +10,28 @@ class Shoppers(datajanitor.DataJanitor):
                          filename='shoppers.csv')
         self.scoring = 'balanced_accuracy'
 
+        self.gridParams = {
+            'adaboost': {
+                'learning_rate': [0.3, 1.2]
+            },
+            'ann': {
+                'alpha': [0.1, 1.0],
+                'hidden_units': [(20, 20), (20, 20, 20),
+                                 (100, 100, 100)]
+            },
+            'dt': {
+                'max_depth': range(1, 4),
+                'max_leaf_nodes': range(5, 8)
+            },
+            'kernelSVM': {
+                'C': [0.25, 0.50, 0.75],
+                'gamma': [0.001, 0.01, 0.1]
+            },
+            'knn': {
+                'n_neighbors': [100, 150, 200, 500]
+            }
+        }
+
     def formatData(self, keepCorr=False, doOHE=False, **kwargs):
         super().formatData()
 

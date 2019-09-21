@@ -33,6 +33,7 @@ class DataJanitor:
         self.label = None
         self.df = None  # raw pandas dataframe
         self.scoring = 'accuracy'
+        self.gridParams = None
 
     def getData(self, **kwargs):
         # Download file (if necessary), format it, convert to csv
@@ -111,3 +112,9 @@ class DataJanitor:
 
     def getScorer(self):
         return self.scoring
+
+    def getGridParams(self, clfType):
+        """
+        Grid params are defined in child class constructors
+        """
+        return self.gridParams[clfType]

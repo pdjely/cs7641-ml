@@ -137,15 +137,16 @@ def plotValidationCurve(clf, X, y, scoring, paramName,
                      color="navy", lw=lw)
     plt.legend(loc="best")
     if savedir is not None:
-        plt.savefig('{}/vc_{}_{}.png'.format(savedir, clfName, paramName))
+        plt.savefig('{}/{}-vc-{}.png'.format(savedir, clfName, paramName))
     return plt
 
 
-def gridSearch(dsName, classifiers, X, y, scoring):
+def gridSearch(dataset, classifiers, X, y, scoring):
     # Train all classifiers sequentially
     bestParams = []
     for classifier in classifiers:
-        clf, clfParams = A1.getClfParams(classifier, dsName, pipe=True)
+        clf, clfParams = A1.getClfParams(classifier, dataset.name, pipe=True)
+        # clfParams = dataset.getGridParams(classifier)
         print('\n\n{}: Performing grid search over following parameters:\n{}\n'
               .format(classifier, clfParams))
         pipeline = Pipeline(steps=[('scaler', StandardScaler()),
@@ -157,7 +158,7 @@ def gridSearch(dsName, classifiers, X, y, scoring):
         best = clfCV.best_params_
         print(best)
         # save best parameters (not classifier object)
-        joblib.dump(best, 'models/{}_{}_params.dat'.format(dsName, classifier))
+        joblib.dump(best, 'models/{}_{}_params.dat'.format(dataset.name, classifier))
         bestParams.append(best)
 
     return {k: v for k, v in zip(classifiers, bestParams)}
