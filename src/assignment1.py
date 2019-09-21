@@ -37,7 +37,8 @@ def main():
                        testy,
                        dataset.scoring,
                        outputDir=outputDir,
-                       params=None)
+                       params=None,
+                       dsname=dataset.name)
 
         # Phase 1: Initial model complexity analysis
         # identify hyperparameters that have some reasonable effect
@@ -68,18 +69,16 @@ def main():
                                 dataset.scoring,
                                 outputDir=outputDir,
                                 params=best_params,
-                                scoreType='tuned')
-
-        if 'compare' in args.phases:
-            if fitted is None:
-                raise RuntimeError('No fitted classifiers and no saved params')
-            print('Generating final comparison F1 scores')
-            finalScore(fitted, testX, testy, dataset.name, outputDir)
+                                scoreType='tuned',
+                                dsname=dataset.name)
 
 
 def scoreModel(classifiers, X, y, testX, testy, scoring,
-               outputDir, params, scoreType='baseline'):
+               outputDir, params, scoreType='baseline',
+               dsname=''):
     fitClassifiers = {}
+    scores = []
+    names = []
     for classifier in classifiers:
         clf, _ = A1.getClfParams(classifier)
         if params is not None:
@@ -113,6 +112,8 @@ def scoreModel(classifiers, X, y, testX, testy, scoring,
         pipeline.fit(X, y)
         ypred = pipeline.predict(testX)
         fitClassifiers[classifier] = pipeline
+        scores.append(f1_score(testy, ypred))
+        names.append(classifier)
 
         # Generate confusion matrix
         print('{}: Scoring predictions against test set'
@@ -122,6 +123,9 @@ def scoreModel(classifiers, X, y, testX, testy, scoring,
                              scoreType=scoreType)
 
         plt.close('all')
+
+    plotBarScores(scores, names, '', outputDir, phaseName=scoreType)
+    plt.close('all')
     return fitClassifiers
 
 
@@ -205,15 +209,7 @@ def initialMCA(classifiers, X, y, scoring, savedir):
                 plt.close('all')
 
 
-def finalScore(fittedClassifiers, testX, testy, dsname, outputdir, phaseName='final'):
-    scores = []
-    names = []
-    for clfName, clf in fittedClassifiers.items():
-        # Score each classifier then plot
-        ypred = clf.predict(testX)
-        scores.append(f1_score(testy, ypred))
-        names.append(clfName)   # to ensure we preserve ordering
-
+def plotBarScores(scores, names, dsname, outputdir, phaseName):
     # barplot code stolen from matplotlib examples
     # https://matplotlib.org/3.1.1/gallery/lines_bars_and_markers/barh.html
     y_pos = np.arange(len(names))
@@ -287,7 +283,7 @@ def getArgs():
     parser = argparse.ArgumentParser(description='CS7641 Assignment 1')
 
     validClassifiers = ['dt', 'ann', 'svm', 'boost', 'knn']
-    validPhases = ['baseline', 'mca', 'grid', 'compare']
+    validPhases = ['baseline', 'mca', 'grid']
     validData = ['adult', 'shoppers', 'news', 'cancer', 'spam', 'musk']
 
     parser.add_argument('-c', '--classifiers',

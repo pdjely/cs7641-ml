@@ -75,6 +75,7 @@ def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5, scoreType=''):
     plt.title('Learning Curve ({})'.format(title))
     plt.xlabel("Training examples")
     plt.ylabel("Score")
+    plt.ylim(0.4, 1.1)
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
@@ -123,7 +124,7 @@ def plotValidationCurve(clf, X, y, scoring, paramName,
     plt.title('Validation Curve ({})'.format(clfName))
     plt.xlabel(xlabel)
     plt.ylabel('Score')
-    plt.ylim(0.6, 1.1)
+    plt.ylim(0.4, 1.1)
     lw = 2
     plt.plot(paramRange, train_scores_mean, label="Training score",
              color="darkorange", lw=lw)
