@@ -18,8 +18,8 @@ class Cancer(datajanitor.DataJanitor):
                 'n_estimators': range(50, 150, 50)
             },
             'ann': {
-                'hidden_units': [(20, 20), (50, 50),
-                                 (20, 20, 20), (50, 50, 50)]
+                'hidden_layer_sizes': [(20, 20), (50, 50),
+                                       (20, 20, 20), (50, 50, 50)]
             },
             'dt': {
                 'max_depth': range(3, 20, 5)

@@ -220,7 +220,7 @@ def finalScore(fittedClassifiers, testX, testy, dsname, outputdir, phaseName='fi
     plt.rcdefaults()
     fig, ax = plt.subplots()
 
-    ax.barh(y_pos, 1.0, align='center')
+    ax.barh(y_pos, scores, align='center')
     ax.set_yticks(y_pos)
     ax.set_yticklabels(names)
     ax.invert_yaxis()  # labels read top-to-bottom

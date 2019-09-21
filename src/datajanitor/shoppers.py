@@ -8,7 +8,7 @@ class Shoppers(datajanitor.DataJanitor):
         super().__init__(name='shoppers',
                          dataUrl=url,
                          filename='shoppers.csv')
-        self.scoring = 'balanced_accuracy'
+        self.scoring = 'f1_weighted'
 
         self.gridParams = {
             'adaboost': {
@@ -16,8 +16,8 @@ class Shoppers(datajanitor.DataJanitor):
             },
             'ann': {
                 'alpha': [0.1, 1.0],
-                'hidden_units': [(20, 20), (20, 20, 20),
-                                 (100, 100, 100)]
+                'hidden_layer_sizes': [(20, 20), (20, 20, 20),
+                                       (100, 100, 100)]
             },
             'dt': {
                 'max_depth': range(1, 4),

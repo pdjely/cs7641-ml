@@ -18,7 +18,7 @@ class Adult(datajanitor.DataJanitor):
         super().__init__(name='adult',
                          dataUrl=url,
                          filename='adult.data')
-        self.scoring = 'balanced_accuracy'
+        self.scoring = 'f1_weighted'
 
         self.gridParams = {
             'adaboost': {
@@ -27,8 +27,8 @@ class Adult(datajanitor.DataJanitor):
             },
             'ann': {
                 'alpha': [1e-4, 1e-3, 1e-2, 1e-1],
-                'hidden_units': [(20, 20), (50, 50), (100, 100), (200, 200),
-                                 (20, 20, 20), (50, 50, 50), (300, 200, 100)]
+                'hidden_layer_sizes': [(20, 20), (50, 50), (100, 100), (200, 200),
+                                       (20, 20, 20), (50, 50, 50), (300, 200, 100)]
             },
             'dt': {
                 'max_depth': range(3, 8),

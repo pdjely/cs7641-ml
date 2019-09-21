@@ -113,8 +113,13 @@ class DataJanitor:
     def getScorer(self):
         return self.scoring
 
-    def getGridParams(self, clfType):
+    def getGridParams(self, clfType, pipe=True):
         """
         Grid params are defined in child class constructors
         """
-        return self.gridParams[clfType]
+        if pipe:
+            params = {'classifier__' + k: v for k, v
+                      in self.gridParams[clfType].items()}
+            return params
+        else:
+            return self.gridParams[clfType]

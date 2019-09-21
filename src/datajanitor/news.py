@@ -15,7 +15,7 @@ class News(datajanitor.DataJanitor):
         self.csvfile = os.path.join(self.filestorePath,
                                     'OnlineNewsPopularity',
                                     'OnlineNewsPopularity.csv')
-        self.scoring = 'balanced_accuracy'
+        self.scoring = 'f1_weighted'
 
         self.gridParams = {
             'adaboost': {
@@ -23,8 +23,8 @@ class News(datajanitor.DataJanitor):
             },
             'ann': {
                 'alpha': [1e-4, 1e-2, 1e-1, 1.0, 1.2],
-                'hidden_units': [(50, 50), (200, 200), (50, 50, 50),
-                                 (300, 200, 100)]
+                'hidden_layer_sizes': [(50, 50), (200, 200), (50, 50, 50),
+                                       (300, 200, 100)]
             },
             'dt': {
                 'max_depth': range(4, 8),

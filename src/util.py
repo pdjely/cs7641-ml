@@ -145,8 +145,8 @@ def gridSearch(dataset, classifiers, X, y, scoring):
     # Train all classifiers sequentially
     bestParams = []
     for classifier in classifiers:
-        clf, clfParams = A1.getClfParams(classifier, dataset.name, pipe=True)
-        # clfParams = dataset.getGridParams(classifier)
+        clf, _ = A1.getClfParams(classifier, dataset.name, pipe=True)
+        clfParams = dataset.getGridParams(classifier)
         print('\n\n{}: Performing grid search over following parameters:\n{}\n'
               .format(classifier, clfParams))
         pipeline = Pipeline(steps=[('scaler', StandardScaler()),
