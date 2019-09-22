@@ -8,7 +8,7 @@ class Shoppers(datajanitor.DataJanitor):
         super().__init__(name='shoppers',
                          dataUrl=url,
                          filename='shoppers.csv')
-        self.scoring = 'balanced_accuracy'
+        self.scoring = 'f1'
 
         self.gridParams = {
             'adaboost': {

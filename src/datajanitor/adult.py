@@ -18,7 +18,7 @@ class Adult(datajanitor.DataJanitor):
         super().__init__(name='adult',
                          dataUrl=url,
                          filename='adult.data')
-        self.scoring = 'balanced_accuracy'
+        self.scoring = 'f1'
 
         self.gridParams = {
             'adaboost': {
