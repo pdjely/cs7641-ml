@@ -16,7 +16,7 @@ class Musk(datajanitor.DataJanitor):
         super().__init__(name='musk',
                          dataUrl=url,
                          filename='clean2.csv')
-        self.scoring = 'f1_weighted'
+        self.scoring = 'balanced_accuracy'
 
         self.gridParams = {
             'adaboost': {

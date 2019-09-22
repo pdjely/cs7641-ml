@@ -9,7 +9,7 @@ class Cancer(datajanitor.DataJanitor):
         super().__init__(name='cancer',
                          dataUrl='',
                          filename='')
-        self.scoring = 'f1_weighted'
+        self.scoring = 'f1'
 
         # very simple dataset so grid params not very thorough
         self.gridParams = {
