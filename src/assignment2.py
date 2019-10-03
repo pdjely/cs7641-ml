@@ -1,5 +1,8 @@
 import mlrose
+import A2
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
@@ -79,8 +82,104 @@ def run_mlweight():
     print(y_test_accuracy)
 
 
+def fourpeaks():
+    print('\n|========= Four Peaks =========|\n\n')
+    max_iter = 500
+    fitness = mlrose.FourPeaks(t_pct=0.10)
+    problem_size = [30, 60, 90]
+    hyperparams = {
+        'rhc': {
+            'restarts': 0,
+            'max_attempts': max_iter * 2
+        },
+        'mimic': {
+            'pop_size': 3000,
+            'keep_pct': 0.15,
+            'max_attempts': 100
+        },
+        'sa': {
+            'schedule': mlrose.GeomDecay(),
+            'init_state': None,
+            'max_attempts': max_iter * 2
+        },
+        'ga': {
+            'pop_size': 200,
+            'mutation_prob': 0.2,
+            'max_attempts': max_iter * 2
+        }
+    }
+
+    results = []
+    timings = []
+    for ps in problem_size:
+        problem = mlrose.DiscreteOpt(ps, fitness, max_val=2, maximize=True)
+        print('Running with input size', ps)
+        print('-----------------------------')
+
+        r, t = A2.optimize_iters(problem, max_iter, hyperparams)
+        print('Last five fitness scores: ')
+        print(r.tail(5), '\n')
+        results.append(r)
+        timings.append(t)
+
+    print('final timings')
+    t = pd.DataFrame(timings, index=problem_size)
+    print(t)
+    t.to_csv('timings.csv')
+    for i, df in enumerate(results):
+        df.to_csv('iter{}.csv'.format(i))
+
+
+def kcolor():
+    edges = [(0, 1), (0, 2), (0, 4), (1, 3), (2, 0), (2, 3), (3, 4)]
+    fitness = mlrose.MaxKColor(edges)
+    problem = mlrose.DiscreteOpt(5,
+                                 fitness,
+                                 max_val=5,
+                                 maximize=True)
+
+    best_state, best_fitness, curve = mlrose.random_hill_climb(problem,
+                                                               max_attempts=1000,
+                                                               restarts=1000,
+                                                               random_state=10,
+                                                               curve=True)
+    print('RHC')
+    print(best_state, best_fitness)
+    print(curve.shape)
+
+    best_state, best_fitness, curve = mlrose.mimic(problem,
+                                                   pop_size=200,
+                                                   keep_pct=0.2,
+                                                   max_attempts=1000,
+                                                   curve=True,
+                                                   random_state=10)
+    print('MIMIC')
+    print(best_state, best_fitness)
+    print(curve.shape)
+
+    best_state, best_fitness, curve = mlrose.simulated_annealing(problem,
+                                                                 schedule=mlrose.GeomDecay(),
+                                                                 max_attempts=1000,
+                                                                 init_state=None,
+                                                                 curve=True,
+                                                                 random_state=10)
+    print('SA')
+    print(best_state, best_fitness)
+    print(curve.shape)
+
+    best_state, best_fitness, curve = mlrose.genetic_alg(problem,
+                                                         pop_size=200,
+                                                         mutation_prob=0.1,
+                                                         max_attempts=1000,
+                                                         curve=True,
+                                                         random_state=2)
+    print('GA')
+    print(best_state, best_fitness)
+    print(curve.shape)
+
+
 def main():
-    run_mlweight()
+    fourpeaks()
 
 
 if __name__ == '__main__':
