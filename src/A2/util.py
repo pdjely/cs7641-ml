@@ -30,23 +30,28 @@ def optimize_iters(problem, max_iters, hyperparams):
 
     # TODO: Run 5 times and average results
     results = {}
+    runtimes = {}
     timings = {}
     for algo, name in zip(algos, algo_names):
         # Timing from StackOverflow
         # Source:
         print('Running {}'.format(algo_long_name[name]))
         start_time = timeit.default_timer()
+        print(hyperparams[name])
         best_state, best_fitness, curve = algo(problem,
                                                max_iters=max_iters,
                                                curve=True,
+                                               timing=True,
                                                random_state=random_state,
                                                **hyperparams[name])
         end_time = timeit.default_timer()
-        results[name] = curve
-        timings[name] = end_time - start_time
+        # Take just the fitness values from curve for plotting iterations-fitness
+        results[name] = curve[:, 1]
+        runtimes[name] = end_time - start_time
+        timings[name] = curve
 
     # DataFrame from uneven lists
     # https://stackoverflow.com/questions/19736080/creating-dataframe-from-a-dictionary-where-entries-have-different-lengths
     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in results.items()]))
     df.index.name = 'iter'
-    return df, timings
+    return df, runtimes, timings
