@@ -15,7 +15,6 @@ def optimize_iters(problem, max_iters, hyperparams):
         in columns
     """
     print('Max iterations: {}'.format(max_iters))
-    max_attempts = max_iters * 2
     random_state = 10
 
     # Set up the four optimization algorithms
@@ -43,12 +42,9 @@ def optimize_iters(problem, max_iters, hyperparams):
                                                random_state=random_state,
                                                **hyperparams[name])
         end_time = timeit.default_timer()
-        # print('Best state: ', best_state, '\nBest fitness: ', best_fitness)
-        # print(curve.shape)
         results[name] = curve
         timings[name] = end_time - start_time
 
-    # df = pd.DataFrame.from_dict(results)
     # DataFrame from uneven lists
     # https://stackoverflow.com/questions/19736080/creating-dataframe-from-a-dictionary-where-entries-have-different-lengths
     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in results.items()]))

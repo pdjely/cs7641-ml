@@ -11,6 +11,20 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 import joblib
+import datetime
+import os
+
+
+def mktmpdir():
+    """
+    Create output directory based on date/time
+    :return: string, relative path to new directory
+    """
+    runName = datetime.datetime.now().strftime('%m%d%H%M%S')
+    baseoutDir = 'output/{}'.format(runName)
+    os.makedirs(baseoutDir, exist_ok=True)
+    print('Saving output to output/{}'.format(runName))
+    return baseoutDir
 
 
 def plot_learning_curve(title, clf, X, y, scoring, savedir, cv=5, scoreType=''):
