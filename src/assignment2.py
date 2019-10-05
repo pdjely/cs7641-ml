@@ -94,7 +94,11 @@ def kcolor():
 
 def fourpeaks(savedir=None):
     # With early stopping
-    t, r, timings = A2.fourpeaks(max_iter=5000, early_stop=None, mimic_early_stop=500, savedir=savedir)
+    t, r, timings = A2.fourpeaks(max_iter=5000,
+                                 early_stop=500,
+                                 mimic_early_stop=100,
+                                 n_runs=1,
+                                 savedir=savedir)
 
 
 def main():

@@ -5,7 +5,8 @@ from . import util
 
 
 def fourpeaks(max_iter=500, early_stop=None,
-              mimic_early_stop=100, savedir=None):
+              mimic_early_stop=100, n_runs=10,
+              savedir=None):
     print('\n|========= Four Peaks =========|\n\n')
     fitness = mlrose.FourPeaks(t_pct=0.10)
     problem_size = [30, 60, 90]
@@ -28,8 +29,8 @@ def fourpeaks(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 200,
-            'mutation_prob': 0.2,
+            'pop_size': 2000,
+            'mutation_prob': 0.3,
             'max_attempts': max_attempts
         }
     }
@@ -43,7 +44,7 @@ def fourpeaks(max_iter=500, early_stop=None,
         print('Running with input size', ps)
         print('-----------------------------')
 
-        r, t, wt = util.optimize_iters(problem, max_iter, hyperparams)
+        r, t, wt = util.optimize_iters(problem, max_iter, hyperparams, n_runs)
         print('Last five fitness scores: ')
         print(r.tail(5), '\n')
         results.append(r)
