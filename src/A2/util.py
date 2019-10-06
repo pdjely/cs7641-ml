@@ -49,10 +49,17 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
             if i == 0:
                 results[name] = curve[:, 1]
                 runtimes[name] = end_time - start_time
-                timings[name] = curve  # x val in times is not fixed
+                timings[name] = curve
             else:
                 results[name] = add_diffsize(results[name], curve[:, 1])
                 runtimes[name] = runtimes[name] + end_time - start_time
+                # timings independent variable is wall clock time, which makes
+                # it non-trivial to average. So instead just take the timing
+                # with the highest fitness
+                print('max iteration fitness: ', np.max(curve[:, 1]))
+                print('max saved fitness: ', np.max(timings[name][:, 1]))
+                if np.max(curve[:, 1]) > np.max(timings[name][:, 1]):
+                    timings[name] = curve
 
     for k in results.keys():
         results[k] = results[k] / n_runs
@@ -62,6 +69,9 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
     # https://stackoverflow.com/questions/19736080/creating-dataframe-from-a-dictionary-where-entries-have-different-lengths
     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in results.items()]))
     df.index.name = 'iter'
+
+    print('Last five fitness scores: ')
+    print(df.tail(5), '\n')
     return df, runtimes, timings
 
 
@@ -84,3 +94,28 @@ def add_diffsize(a, b):
         c[:len(b)] += b
         c[len(b):] += b[-1]
     return c
+
+
+def save_output(problem_name, savedir, runtimes,
+                results, timings, problem_size):
+    """
+    Save optimization results to output directory
+
+    :param problem_name: string, name of optimization problem
+    :param savedir: string, output directory
+    :param runtimes: dataframe, total runtimes by problem_size
+    :param results: dataframe, fitness scores by iteration
+    :param timings: dataframe, fitness scores by wall clock time
+    :param problem_size: list, input sizes
+    """
+    runtimes.to_csv('{}/{}_runtimes.csv'.format(savedir, problem_name))
+    for i, df in enumerate(results):
+        df.to_csv('{}/{}_ps{}.csv'.format(savedir, problem_name,
+                                          problem_size[i]))
+
+    # Write the timings as a single dataframe
+    for k, v in timings.items():
+        for atype, times in v.items():
+            tdf = pd.DataFrame(times, columns=['time', 'fitness'])
+            tdf.to_csv('{}/{}_{}_{}_timings.csv'
+                       .format(savedir, problem_name, k, atype))

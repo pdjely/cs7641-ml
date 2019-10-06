@@ -13,15 +13,18 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 import datetime
 import os
+import shutil
 
 
-def mktmpdir():
+def mktmpdir(dirname=None):
     """
     Create output directory based on date/time
     :return: string, relative path to new directory
     """
-    runName = datetime.datetime.now().strftime('%m%d%H%M%S')
+    runName = dirname or datetime.datetime.now().strftime('%m%d%H%M%S')
     baseoutDir = 'output/{}'.format(runName)
+    # blast existing directory -- nothing in output is safe!
+    shutil.rmtree(baseoutDir, ignore_errors=True)
     os.makedirs(baseoutDir, exist_ok=True)
     print('Saving output to output/{}'.format(runName))
     return baseoutDir

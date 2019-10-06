@@ -1,40 +1,26 @@
 import mlrose
 import A2
 import util
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+import argparse
+import datajanitor
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 
-def run_tsp():
-    """
-    Travelling Salesperson Problem Example
+def main():
+    args = getArgs()
+    savedir = util.mktmpdir(args.outdir)
 
-    Example of steps to solve an optimization problem in mlrose
-      1. Define a fitness function object
-      2. Define an optimization problem object
-      3. Select and run a randomized optimization algorithm
-
-    Source mlrose documentation
-    https://mlrose.readthedocs.io/en/stable/source/tutorial2.html
-    """
-    coords_list = [(1, 1), (4, 2), (5, 2), (6, 4), (4, 4), (3, 6), (1, 5), (2, 3)]
-
-    # Fitness object
-    fitness_coords = mlrose.TravellingSales(coords=coords_list)
-
-    # Optimization problem object
-    problem_fit = mlrose.TSPOpt(length=8, fitness_fn=fitness_coords, maximize=False)
-
-    # solve
-    best_state, best_fitness = mlrose.genetic_alg(problem_fit, random_state=2)
-
-    print(best_state)
-    print(best_fitness)
+    problem_table = {
+        'fourpeaks': fourpeaks,
+        'tsp': tsp,
+        'flipflop': flipflop,
+        'onemax': onemax
+    }
+    for p in args.problems:
+        problem_table[p](savedir)
 
 
 def run_mlweight():
@@ -52,10 +38,11 @@ def run_mlweight():
     https://mlrose.readthedocs.io/en/stable/source/tutorial3.html
     :return:
     """
-    data = load_iris()
+    dataset = datajanitor.getDataset('musk')
+    dataset.getData()
 
-    x_train, x_test, y_train, y_test = train_test_split(data.data, data.target,
-                                                        test_size=0.2, random_state=1)
+    x_train, x_test, y_train, y_test = dataset.partitionData(percent=0.3,
+                                                             randomState=10)
     # data preprocessing
     scaler = MinMaxScaler()
     x_train_scaled = scaler.fit_transform(x_train)
@@ -83,27 +70,58 @@ def run_mlweight():
     print(y_test_accuracy)
 
 
-def kcolor():
-    edges = [(0, 1), (0, 2), (0, 4), (1, 3), (2, 0), (2, 3), (3, 4)]
-    fitness = mlrose.MaxKColor(edges)
-    problem = mlrose.DiscreteOpt(5,
-                                 fitness,
-                                 max_val=5,
-                                 maximize=True)
-
-
 def fourpeaks(savedir=None):
     # With early stopping
     t, r, timings = A2.fourpeaks(max_iter=5000,
                                  early_stop=500,
                                  mimic_early_stop=100,
-                                 n_runs=1,
+                                 n_runs=10,
                                  savedir=savedir)
 
 
-def main():
-    savedir = util.mktmpdir()
-    fourpeaks(savedir)
+def tsp(savedir=None):
+    t, r, timings = A2.tsp(max_iter=1000,
+                           early_stop=500,
+                           mimic_early_stop=50,
+                           n_runs=1,
+                           savedir=savedir)
+
+
+def flipflop(savedir=None):
+    t, r, timings = A2.flipflop(max_iter=5000,
+                                early_stop=500,
+                                mimic_early_stop=100,
+                                n_runs=10,
+                                savedir=savedir)
+
+
+def onemax(savedir=None):
+    t, r, timings = A2.onemax(max_iter=100,
+                              early_stop=500,
+                              mimic_early_stop=10,
+                              n_runs=1,
+                              savedir=savedir)
+
+
+def getArgs():
+    parser = argparse.ArgumentParser(description='CS7641 Assignment 2')
+
+    validProblems = ['fourpeaks', 'tsp', 'onemax', 'flipflop']
+
+    parser.add_argument('-p', '--problems',
+                        help='Space-separated list of problems to run (default: all)',
+                        choices=validProblems, default=validProblems,
+                        nargs='+')
+    # parser.add_argument('-d', '--datasets',
+    #                     help='Space-separated list of datasets (default: all)',
+    #                     choices=validData, default=validData,
+    #                     nargs='+')
+    parser.add_argument('-o', '--outdir',
+                        help='Directory to save files to (optional: default timestamp)',
+                        nargs='?', default=None)
+
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == '__main__':
