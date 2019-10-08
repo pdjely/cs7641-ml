@@ -16,7 +16,7 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
         in columns
     """
     print('Max iterations: {}'.format(max_iters))
-    random_state = 10
+    random_state = 112
 
     # Set up the four optimization algorithms
     algos = [mlrose.random_hill_climb, mlrose.mimic,
@@ -34,7 +34,7 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
     timings = {}
     print('Algorithm hyperparameters: ', hyperparams)
     for i in range(n_runs):
-        random_state += 10
+        random_state += 123
         print('Starting run {}'.format(i))
         for algo, name in zip(algos, algo_names):
             start_time = timeit.default_timer()
@@ -45,19 +45,20 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
                                                    random_state=random_state,
                                                    **hyperparams[name])
             end_time = timeit.default_timer()
+            if name == 'mimic':
+                # print('best fitness: {}'.format(best_fitness))
+                print('{} {}: fitness {}'.format(name, i, curve[:, 1]))
             # Take just the fitness values from curve for plotting iterations-fitness
             if i == 0:
                 results[name] = curve[:, 1]
                 runtimes[name] = end_time - start_time
                 timings[name] = curve
             else:
-                results[name] = add_diffsize(results[name], curve[:, 1])
+                results[name] = add_diffsize(results[name], curve[:, 1], i)
                 runtimes[name] = runtimes[name] + end_time - start_time
                 # timings independent variable is wall clock time, which makes
                 # it non-trivial to average. So instead just take the timing
                 # with the highest fitness
-                print('max iteration fitness: ', np.max(curve[:, 1]))
-                print('max saved fitness: ', np.max(timings[name][:, 1]))
                 if np.max(curve[:, 1]) > np.max(timings[name][:, 1]):
                     timings[name] = curve
 
@@ -75,20 +76,23 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
     return df, runtimes, timings
 
 
-def add_diffsize(a, b):
+def add_diffsize(a, b, iteration):
     """
     Add two numpy arrays of possibly different size
 
-    Stolen word for word from Stack Overflow:
+    Stolen with modifications from Stack Overflow:
         https://stackoverflow.com/questions/7891697/numpy-adding-two-vectors-with-different-sizes
     :param a: numpy array, first operand
     :param b: numpy array, second operand
+    :param iteration:
     :return: numpy array, newly allocated to length of longest of a and b
     """
     if len(a) < len(b):
+        # a is stored results, which means new b value needs to be increased
+        # by number of iterations
         c = b.copy()
         c[:len(a)] += a
-        c[len(a):] += a[-1]
+        c[len(a):] *= (iteration + 1)
     else:
         c = a.copy()
         c[:len(b)] += b
