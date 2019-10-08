@@ -123,7 +123,7 @@ dependencies:
   - zeromq=4.3.1=he6710b0_3
   - zlib=1.2.11=h7b6447c_3
   - pip:
-    - mlrose==1.2.0
+    - git+https://github.com/pdjely/mlrose.git
     - sklearn==0.0
 prefix: /home/paul/miniconda3/envs/cs7641
 

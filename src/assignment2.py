@@ -7,6 +7,7 @@ from sklearn.datasets import load_iris
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import numpy as np
 
 
 def main():
@@ -72,34 +73,34 @@ def run_mlweight():
 
 def fourpeaks(savedir=None):
     # With early stopping
-    t, r, timings = A2.fourpeaks(max_iter=5000,
-                                 early_stop=500,
-                                 mimic_early_stop=100,
+    t, r, timings = A2.fourpeaks(max_iter=np.inf,
+                                 early_stop=2000,
+                                 mimic_early_stop=50,
                                  n_runs=10,
                                  savedir=savedir)
 
 
 def tsp(savedir=None):
     t, r, timings = A2.tsp(max_iter=1000,
-                           early_stop=500,
-                           mimic_early_stop=50,
+                           early_stop=100,
+                           mimic_early_stop=30,
                            n_runs=1,
                            savedir=savedir)
 
 
 def flipflop(savedir=None):
-    t, r, timings = A2.flipflop(max_iter=5000,
-                                early_stop=500,
-                                mimic_early_stop=100,
+    t, r, timings = A2.flipflop(max_iter=np.inf,
+                                early_stop=2000,
+                                mimic_early_stop=50,
                                 n_runs=10,
                                 savedir=savedir)
 
 
 def onemax(savedir=None):
-    t, r, timings = A2.onemax(max_iter=100,
-                              early_stop=500,
+    t, r, timings = A2.onemax(max_iter=np.inf,
+                              early_stop=1000,
                               mimic_early_stop=10,
-                              n_runs=1,
+                              n_runs=5,
                               savedir=savedir)
 
 

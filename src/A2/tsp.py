@@ -4,7 +4,7 @@ import pandas as pd
 from . import util
 
 
-def get_tsp_coords(n, max_coord=200, random_state=None):
+def get_tsp_coords(n, max_coord=500, random_state=None):
     """
     Generate traveling salesperson problem coordinates
 
@@ -44,7 +44,7 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
     :return:
     """
     print('\n\n|========= Traveling Salesman =========|\n')
-    problem_size = [10, 30, 60]
+    problem_size = [100]
     max_attempts = max_iter * 2 if early_stop is None else early_stop
     mimic_early_stop = max_attempts if mimic_early_stop is None else mimic_early_stop
     hyperparams = {
@@ -53,8 +53,8 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 1000,
-            'keep_pct': 0.15,
+            'pop_size': 500,
+            'keep_pct': 0.5,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
         },
@@ -64,9 +64,9 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 2000,
-            'mutation_prob': 0.3,
-            'pop_breed_percent': 0.75,
+            'pop_size': 500,
+            'mutation_prob': 0.1,
+            'pop_breed_percent': 0.50,
             'elite_dreg_ratio': 0.85,
             'max_attempts': max_attempts
         }
@@ -79,7 +79,7 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
     for ps in problem_size:
         print('Running with {} city locations'.format(ps))
         print('------------------------------------')
-        coords_list = get_tsp_coords(ps)
+        coords_list = get_tsp_coords(ps, random_state=ps)
         print(coords_list)
 
         # Set up the problem

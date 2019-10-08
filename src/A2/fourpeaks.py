@@ -9,7 +9,7 @@ def fourpeaks(max_iter=500, early_stop=None,
               savedir=None):
     print('\n\n|========= Four Peaks =========|\n')
     fitness = mlrose.FourPeaks(t_pct=0.10)
-    problem_size = [30, 60, 90]
+    problem_size = [30, 90, 200]
     max_attempts = max_iter * 2 if early_stop is None else early_stop
     mimic_early_stop = max_attempts if mimic_early_stop is None else mimic_early_stop
     hyperparams = {
@@ -18,23 +18,22 @@ def fourpeaks(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 3000,
-            'keep_pct': 0.15,
+            'pop_size': 2000,
+            'keep_pct': 0.25,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
         },
         'sa': {
-            'schedule': mlrose.GeomDecay(),
+            'schedule': mlrose.GeomDecay(init_temp=2., decay=0.4),
             'init_state': None,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 2000,
+            'pop_size': 500,
             'mutation_prob': 0.3,
-            'max_attempts': max_attempts
+            'max_attempts': mimic_early_stop
         }
     }
-    print('Hyperparameters: ', hyperparams)
 
     results = []
     runtimes = []
@@ -45,8 +44,6 @@ def fourpeaks(max_iter=500, early_stop=None,
         print('-----------------------------')
 
         r, t, wt = util.optimize_iters(problem, max_iter, hyperparams, n_runs)
-        print('Last five fitness scores: ')
-        print(r.tail(5), '\n')
         results.append(r)
         runtimes.append(t)
         timings['ps{}'.format(ps)] = wt

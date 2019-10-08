@@ -9,7 +9,7 @@ def onemax(max_iter=500, early_stop=None,
            savedir=None):
     print('\n\n|========= One Max =========|\n')
     fitness = mlrose.OneMax()
-    problem_size = [10, 100, 1000]
+    problem_size = [10, 100, 500]
     max_attempts = max_iter * 2 if early_stop is None else early_stop
     mimic_early_stop = max_attempts if mimic_early_stop is None else mimic_early_stop
     hyperparams = {
@@ -18,7 +18,7 @@ def onemax(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 2000,
+            'pop_size': 1000,
             'keep_pct': 0.3,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
@@ -29,10 +29,10 @@ def onemax(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 2000,
+            'pop_size': 1000,
             'mutation_prob': 0.25,
             'pop_breed_percent': 0.60,
-            'elite_dreg_ratio': 0.75,
+            'elite_dreg_ratio': 0.90,
             'max_attempts': max_attempts
         }
     }

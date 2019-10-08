@@ -18,7 +18,7 @@ def flipflop(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 200,
+            'pop_size': 1000,
             'keep_pct': 0.2,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
@@ -29,9 +29,11 @@ def flipflop(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 200,
+            'pop_size': 1000,
             'mutation_prob': 0.2,
-            'max_attempts': max_attempts
+            'pop_breed_percent': 0.6,
+            'elite_dreg_ratio': 0.95,
+            'max_attempts': mimic_early_stop
         }
     }
     print('Hyperparameters: ', hyperparams)
@@ -45,8 +47,6 @@ def flipflop(max_iter=500, early_stop=None,
         print('-----------------------------')
 
         r, t, wt = util.optimize_iters(problem, max_iter, hyperparams, n_runs)
-        print('Last five fitness scores: ')
-        print(r.tail(5), '\n')
         results.append(r)
         runtimes.append(t)
         timings['ps{}'.format(ps)] = wt
