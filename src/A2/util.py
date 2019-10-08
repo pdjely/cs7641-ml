@@ -48,24 +48,15 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
             if name == 'mimic':
                 # print('best fitness: {}'.format(best_fitness))
                 print('{} {}: fitness {}'.format(name, i, curve[:, 1]))
-            # Take just the fitness values from curve for plotting iterations-fitness
-            if i == 0:
+
+            # only save if this is the best run, do this instead of averaging
+            # because each run can have different lengths AND there were
+            # some wild variations in the MIMIC implementation
+            if i == 0 or best_fitness > np.max(timings[name][:, 1]):
                 results[name] = curve[:, 1]
                 runtimes[name] = end_time - start_time
                 timings[name] = curve
-            else:
-                results[name] = add_diffsize(results[name], curve[:, 1], i)
-                runtimes[name] = runtimes[name] + end_time - start_time
-                # timings independent variable is wall clock time, which makes
-                # it non-trivial to average. So instead just take the timing
-                # with the highest fitness
-                if np.max(curve[:, 1]) > np.max(timings[name][:, 1]):
-                    timings[name] = curve
 
-    for k in results.keys():
-        results[k] = results[k] / n_runs
-    for k in runtimes.keys():
-        runtimes[k] = runtimes[k] / n_runs
     # DataFrame from uneven lists
     # https://stackoverflow.com/questions/19736080/creating-dataframe-from-a-dictionary-where-entries-have-different-lengths
     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in results.items()]))
@@ -74,30 +65,6 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
     print('Last five fitness scores: ')
     print(df.tail(5), '\n')
     return df, runtimes, timings
-
-
-def add_diffsize(a, b, iteration):
-    """
-    Add two numpy arrays of possibly different size
-
-    Stolen with modifications from Stack Overflow:
-        https://stackoverflow.com/questions/7891697/numpy-adding-two-vectors-with-different-sizes
-    :param a: numpy array, first operand
-    :param b: numpy array, second operand
-    :param iteration:
-    :return: numpy array, newly allocated to length of longest of a and b
-    """
-    if len(a) < len(b):
-        # a is stored results, which means new b value needs to be increased
-        # by number of iterations
-        c = b.copy()
-        c[:len(a)] += a
-        c[len(a):] *= (iteration + 1)
-    else:
-        c = a.copy()
-        c[:len(b)] += b
-        c[len(b):] += b[-1]
-    return c
 
 
 def save_output(problem_name, savedir, runtimes,
