@@ -45,7 +45,7 @@ def optimize_iters(problem, max_iters, hyperparams, n_runs=10):
                                                    random_state=random_state,
                                                    **hyperparams[name])
             end_time = timeit.default_timer()
-            if name == 'mimic':
+            if name == 'ga':
                 # print('best fitness: {}'.format(best_fitness))
                 print('{} {}: fitness {}'.format(name, i, curve[:, 1]))
 

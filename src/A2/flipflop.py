@@ -9,7 +9,7 @@ def flipflop(max_iter=500, early_stop=None,
              savedir=None):
     print('\n\n|========= Flip Flop =========|\n')
     fitness = mlrose.FlipFlop()
-    problem_size = [10, 100, 1000]
+    problem_size = [500]
     max_attempts = max_iter * 2 if early_stop is None else early_stop
     mimic_early_stop = max_attempts if mimic_early_stop is None else mimic_early_stop
     hyperparams = {
@@ -18,7 +18,7 @@ def flipflop(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 1000,
+            'pop_size': 500,
             'keep_pct': 0.2,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
@@ -31,7 +31,7 @@ def flipflop(max_iter=500, early_stop=None,
         'ga': {
             'pop_size': 1000,
             'mutation_prob': 0.2,
-            'pop_breed_percent': 0.6,
+            'pop_breed_percent': 0.75,
             'elite_dreg_ratio': 0.95,
             'max_attempts': mimic_early_stop
         }

@@ -81,18 +81,18 @@ def fourpeaks(savedir=None):
 
 
 def tsp(savedir=None):
-    t, r, timings = A2.tsp(max_iter=1000,
-                           early_stop=100,
-                           mimic_early_stop=30,
-                           n_runs=1,
+    t, r, timings = A2.tsp(max_iter=np.inf,
+                           early_stop=1000,
+                           mimic_early_stop=50,
+                           n_runs=10,
                            savedir=savedir)
 
 
 def flipflop(savedir=None):
     t, r, timings = A2.flipflop(max_iter=np.inf,
-                                early_stop=2000,
-                                mimic_early_stop=50,
-                                n_runs=10,
+                                early_stop=200,
+                                mimic_early_stop=20,
+                                n_runs=1,
                                 savedir=savedir)
 
 
@@ -111,7 +111,7 @@ def getArgs():
 
     parser.add_argument('-p', '--problems',
                         help='Space-separated list of problems to run (default: all)',
-                        choices=validProblems, default=validProblems,
+                        choices=validProblems, default=['fourpeaks', 'tsp', 'onemax'],
                         nargs='+')
     # parser.add_argument('-d', '--datasets',
     #                     help='Space-separated list of datasets (default: all)',

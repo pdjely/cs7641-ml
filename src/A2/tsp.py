@@ -44,7 +44,7 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
     :return:
     """
     print('\n\n|========= Traveling Salesman =========|\n')
-    problem_size = [100]
+    problem_size = [5, 10, 30]
     max_attempts = max_iter * 2 if early_stop is None else early_stop
     mimic_early_stop = max_attempts if mimic_early_stop is None else mimic_early_stop
     hyperparams = {
@@ -53,8 +53,8 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 500,
-            'keep_pct': 0.5,
+            'pop_size': 1000,
+            'keep_pct': 0.2,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
         },
@@ -64,11 +64,11 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 500,
+            'pop_size': 1000,
             'mutation_prob': 0.1,
             'pop_breed_percent': 0.50,
             'elite_dreg_ratio': 0.85,
-            'max_attempts': max_attempts
+            'max_attempts': mimic_early_stop
         }
     }
     print('Hyperparameters: ', hyperparams)
@@ -80,7 +80,6 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
         print('Running with {} city locations'.format(ps))
         print('------------------------------------')
         coords_list = get_tsp_coords(ps, random_state=ps)
-        print(coords_list)
 
         # Set up the problem
         fitness_coords = TravellingSalesMaxFit(coords=coords_list)
@@ -110,4 +109,4 @@ class TravellingSalesMaxFit(mlrose.TravellingSales):
     """
     def evaluate(self, state):
         fitness = super().evaluate(state)
-        return 1 / fitness
+        return -fitness
