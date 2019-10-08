@@ -6,3 +6,4 @@ from .fourpeaks import *
 from .tsp import *
 from .flipflop import *
 from .onemax import *
+from .neuralnet import *

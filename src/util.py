@@ -272,3 +272,31 @@ def confusionMatrix(clfName, ytrue, ypred,
                           title=title)
     if savedir is not None:
         plt.savefig('{}/{}-{}-cf.png'.format(savedir, clfName, scoreType))
+
+
+def plotBarScores(scores, names, dsname, outputdir, phaseName):
+    # barplot code stolen from matplotlib examples
+    # https://matplotlib.org/3.1.1/gallery/lines_bars_and_markers/barh.html
+    y_pos = np.arange(len(names))
+    plt.rcdefaults()
+    fig, ax = plt.subplots()
+
+    ax.barh(y_pos, scores, align='center')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(names)
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel('F1 Score')
+    ax.set_title('Classifier Comparison ({})'
+                 .format(dsname))
+    # text labeling stolen from stack overflow
+    # https://stackoverflow.com/questions/30228069/how-to-display-the-value-of-the-bar-on-each-bar-with-pyplot-barh
+    for i, v in enumerate(scores):
+        ax.text(0.20, i, '{:.3}'.format(v),
+                color='white', va='center', fontweight='bold')
+
+    if outputdir:
+        plt.savefig('{}/{}-comp.png'.format(outputdir, phaseName))
+
+    print('F1 scores:')
+    for n, s in zip(names, scores):
+        print('{}:  {}'.format(n, s))

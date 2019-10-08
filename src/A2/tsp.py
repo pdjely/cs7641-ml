@@ -53,7 +53,7 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
             'max_attempts': max_attempts
         },
         'mimic': {
-            'pop_size': 1000,
+            'pop_size': 500,
             'keep_pct': 0.2,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
@@ -65,7 +65,7 @@ def tsp(max_iter=500, early_stop=None, mimic_early_stop=100, n_runs=10,
         },
         'ga': {
             'pop_size': 1000,
-            'mutation_prob': 0.1,
+            'mutation_prob': 0.12,
             'pop_breed_percent': 0.50,
             'elite_dreg_ratio': 0.85,
             'max_attempts': mimic_early_stop
