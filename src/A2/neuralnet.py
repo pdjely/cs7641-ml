@@ -50,21 +50,29 @@ def run_mlweight(savedir):
     param_grids = [
         {  # SA
             'clf__schedule': [mlrose.GeomDecay(),
-                              mlrose.ExpDecay(),
+                              mlrose.GeomDecay(init_temp=1.0, decay=0.1),
+                              mlrose.GeomDecay(init_temp=1.0, decay=0.5),
+                              mlrose.GeomDecay(init_temp=5.0, decay=0.5),
+                              mlrose.ExpDecay(init_temp=1.0, exp_const=0.001),
+                              mlrose.ExpDecay(init_temp=1.0, exp_const=0.00001),
+                              mlrose.ExpDecay(init_temp=5.0, exp_const=0.1),
                               mlrose.ArithDecay(),
                               mlrose.ArithDecay(init_temp=1.0, decay=0.01),
                               mlrose.ArithDecay(init_temp=5.0, decay=0.001)],
-            'clf__max_attempts': [5000]
+            'clf__max_attempts': [10000],
+            'clf__learning_rate': [0.1, 0.01, 0.001, 0.0001, 0.00001]
         },
         {  # RHC, no actual parameters
-            'clf__max_attempts': [5000]
+            'clf__max_attempts': [10000],
+            'clf__learning_rate': [0.01, 0.001, 0.0001]
         },
         {  # GA
             'clf__pop_size': [200, 500, 1000, 2000],
-            'clf__pop_breed_percent': [0.25, 0.5, 0.75],
-            'clf__elite_dreg_ratio': [0.3, 0.6, 0.9],
-            'clf__mutation_prob': [0.1, 0.3, 0.6],
-            'clf__max_attempts': [5000]
+            'clf__pop_breed_percent': [0.2, 0.4, 0.6, 0.8],
+            'clf__elite_dreg_ratio': [0.2, 0.3, 0.6, 0.8, 0.9],
+            'clf__mutation_prob': [0.1, 0.3, 0.6, 0.8],
+            'clf__max_attempts': [500],
+            'clf__learning_rate': [0.01, 0.001, 0.0001]
         }
     ]
 
@@ -80,28 +88,35 @@ def run_mlweight(savedir):
                                         is_classifier=True,
                                         clip_max=5,
                                         random_state=100,
+                                        curve=True,
                                         **ann_hyperparams)
         pipe = Pipeline([('scaler', StandardScaler()),
                          ('clf', nn_model)])
         ann = RandomizedSearchCV(estimator=pipe,
                                  n_iter=10,
                                  param_distributions=params,
-                                 scoring='balanced_accuracy',
+                                 scoring='f1_weighted',
                                  n_jobs=-1,
                                  cv=5)
         ann.fit(x_train, y_train)
         report(ann.cv_results_)
 
         # Refit with whole dataset
-        start = timeit.default_timer()
+        best_params = {k[5:]: v for k, v in ann.best_params_.items()}
         final_model = mlrose.NeuralNetwork(algorithm=opt,
-                                           **ann_hyperparams)
+                                           curve=True,
+                                           is_classifier=True,
+                                           **ann_hyperparams,
+                                           **best_params)
         # final_model.fit(x_train_scaled, y_train)
         final_pipe = Pipeline([('scaler', StandardScaler()),
                                ('clf', final_model)])
+        start = timeit.default_timer()
         final_pipe.fit(x_train, y_train)
         train_time = timeit.default_timer() - start
         print('Final model training took {} seconds'.format(train_time))
+        print(final_model.fitness_curve)
+        pd.DataFrame(final_model.fitness_curve).to_csv('{}/{}-curve.csv'.format(savedir, opt))
 
         # Save best params and training time
         joblib.dump(ann.best_params_, '{}/{}_params.dat'.format(savedir, opt))
