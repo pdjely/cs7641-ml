@@ -33,9 +33,6 @@ def run_mlweight(savedir):
 
     x_train, x_test, y_train, y_test = dataset.partitionData(percent=0.3,
                                                              randomState=10)
-    scaler = StandardScaler()
-    x_train_scaled = scaler.fit_transform(x_train)
-    x_test_scaled = scaler.transform(x_test)
 
     # 1. Initialize neural network model
     # These hyperparameters are taken from assignment 1 and will not be changed
@@ -59,11 +56,11 @@ def run_mlweight(savedir):
                               mlrose.ArithDecay(),
                               mlrose.ArithDecay(init_temp=1.0, decay=0.01),
                               mlrose.ArithDecay(init_temp=5.0, decay=0.001)],
-            'clf__max_attempts': [10000],
+            'clf__max_attempts': [1000],
             'clf__learning_rate': [0.1, 0.01, 0.001, 0.0001, 0.00001]
         },
         {  # RHC, no actual parameters
-            'clf__max_attempts': [10000],
+            'clf__max_attempts': [1000],
             'clf__learning_rate': [0.01, 0.001, 0.0001]
         },
         {  # GA
@@ -85,6 +82,7 @@ def run_mlweight(savedir):
               .format(opt))
         print('-' * 50)
         nn_model = mlrose.NeuralNetwork(algorithm=opt,
+                                        max_iters=np.inf,
                                         is_classifier=True,
                                         clip_max=5,
                                         random_state=100,
@@ -104,6 +102,7 @@ def run_mlweight(savedir):
         # Refit with whole dataset
         best_params = {k[5:]: v for k, v in ann.best_params_.items()}
         final_model = mlrose.NeuralNetwork(algorithm=opt,
+                                           max_iters=np.inf,
                                            curve=True,
                                            is_classifier=True,
                                            **ann_hyperparams,
@@ -124,7 +123,7 @@ def run_mlweight(savedir):
         training_scores[opt] = ann.best_score_
 
         # Score the model on test
-        ypred = final_pipe.predict(x_test_scaled)
+        ypred = final_pipe.predict(x_test)
         util.confusionMatrix(opt, y_test, ypred,
                              savedir=savedir,
                              scoreType='test')
