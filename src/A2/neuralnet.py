@@ -110,12 +110,15 @@ def run_mlweight(savedir):
                                            **ann_hyperparams,
                                            **best_params)
         # final_model.fit(x_train_scaled, y_train)
-        final_pipe = Pipeline([('scaler', StandardScaler()),
-                               ('clf', final_model)])
+        scaler = StandardScaler()
+        x_train_scaled = scaler.fit_transform(x_train)
+        # final_pipe = Pipeline([('scaler', StandardScaler()),
+        #                        ('clf', final_model)])
         print('Starting final training of {} with hyperparams {}'
               .format(opt, final_model.get_params()))
         start = timeit.default_timer()
-        final_pipe.fit(x_train, y_train)
+        # final_pipe.fit(x_train, y_train)
+        final_model.fit(x_train_scaled, y_train)
         train_time = timeit.default_timer() - start
         print('Final model training took {} seconds'.format(train_time))
         print(final_model.fitness_curve)
@@ -127,7 +130,9 @@ def run_mlweight(savedir):
         training_scores[opt] = ann.best_score_
 
         # Score the model on test
-        ypred = final_pipe.predict(x_test)
+        # ypred = final_pipe.predict(x_test)
+        x_test_scaled = scaler.transform(x_test)
+        ypred = final_model.predict(x_test_scaled)
         util.confusionMatrix(opt, y_test, ypred,
                              savedir=savedir,
                              scoreType='test')
