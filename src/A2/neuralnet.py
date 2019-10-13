@@ -64,11 +64,11 @@ def run_mlweight(savedir):
             'clf__learning_rate': [0.01, 0.001, 0.0001]
         },
         {  # GA
-            'clf__pop_size': [200, 500, 1000, 2000],
+            'clf__pop_size': [200, 500, 2000],
             'clf__pop_breed_percent': [0.2, 0.4, 0.6, 0.8],
             'clf__elite_dreg_ratio': [0.2, 0.3, 0.6, 0.8, 0.9],
             'clf__mutation_prob': [0.1, 0.3, 0.6, 0.8],
-            'clf__max_attempts': [500],
+            'clf__max_attempts': [100],
             'clf__learning_rate': [0.01, 0.001, 0.0001]
         }
     ]
@@ -82,7 +82,7 @@ def run_mlweight(savedir):
               .format(opt))
         print('-' * 50)
         nn_model = mlrose.NeuralNetwork(algorithm=opt,
-                                        max_iters=np.inf,
+                                        max_iters=200 if opt == 'genetic_alg' else 50000,
                                         is_classifier=True,
                                         clip_max=5,
                                         random_state=100,
@@ -101,15 +101,19 @@ def run_mlweight(savedir):
 
         # Refit with whole dataset
         best_params = {k[5:]: v for k, v in ann.best_params_.items()}
+        print('best params: ', best_params)
         final_model = mlrose.NeuralNetwork(algorithm=opt,
-                                           max_iters=np.inf,
                                            curve=True,
+                                           max_iters=200 if opt == 'genetic_alg' else 50000,
+                                           clip_max=5,
                                            is_classifier=True,
                                            **ann_hyperparams,
                                            **best_params)
         # final_model.fit(x_train_scaled, y_train)
         final_pipe = Pipeline([('scaler', StandardScaler()),
                                ('clf', final_model)])
+        print('Starting final training of {} with hyperparams {}'
+              .format(opt, final_model.get_params()))
         start = timeit.default_timer()
         final_pipe.fit(x_train, y_train)
         train_time = timeit.default_timer() - start

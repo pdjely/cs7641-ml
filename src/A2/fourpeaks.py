@@ -19,7 +19,7 @@ def fourpeaks(max_iter=500, early_stop=None,
         },
         'mimic': {
             'pop_size': 2000,
-            'keep_pct': 0.25,
+            'keep_pct': 0.15,
             'max_attempts': mimic_early_stop,
             'fast_mimic': True
         },
@@ -29,8 +29,10 @@ def fourpeaks(max_iter=500, early_stop=None,
             'max_attempts': max_attempts
         },
         'ga': {
-            'pop_size': 500,
-            'mutation_prob': 0.3,
+            'pop_size': 1000,
+            'mutation_prob': 0.15,
+            'pop_breed_percent': 0.50,
+            'elite_dreg_ratio': 0.85,
             'max_attempts': mimic_early_stop
         }
     }

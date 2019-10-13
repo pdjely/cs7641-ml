@@ -33,7 +33,7 @@ def tsp(savedir=None):
     t, r, timings = A2.tsp(max_iter=np.inf,
                            early_stop=1000,
                            mimic_early_stop=50,
-                           n_runs=10,
+                           n_runs=5,
                            savedir=savedir)
 
 
