@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import f1_score
+import timeit
 
 
 def main():
@@ -109,7 +110,10 @@ def scoreModel(classifiers, X, y, testX, testy, scoring,
               .format(classifier))
         pipeline = Pipeline(steps=[('scaler', StandardScaler()),
                                    ('classifier', clf)])
+        start_time = timeit.default_timer()
         pipeline.fit(X, y)
+        total_time = timeit.default_timer() - start_time
+        print('Training ANN took {} seconds'.format(total_time))
         ypred = pipeline.predict(testX)
         fitClassifiers[classifier] = pipeline
         scores.append(f1_score(testy, ypred))
