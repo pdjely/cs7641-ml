@@ -20,6 +20,14 @@ Assignment 2
 cd src
 python assignment2.py
 
+A Note on MLRose
+----------------
+This project uses my own fork of the MLRose repository. This fork is located at
+https://github.com/pdjely/mlrose. For this fork, I took modifications from
+fellow students David Park (fast MIMIC) and Andrew Rollings (modified GA). I
+did not use any of Andrews' other refactors, including any of his runner
+code.
+
 
 Assignment 1
 ============
