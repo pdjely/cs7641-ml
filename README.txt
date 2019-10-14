@@ -13,6 +13,9 @@ Activate Environment
 ====================
 conda activate cs7641
 
+Install MLRose pdjely fork (first run only)
+===========================================
+pip install git+https://github.com/pdjely/mlrose.git
 
 Assignment 2
 ============
@@ -20,6 +23,7 @@ Assignment 2
 cd src
 python assignment2.py
 
+----------------
 A Note on MLRose
 ----------------
 This project uses my own fork of the MLRose repository. This fork is located at
