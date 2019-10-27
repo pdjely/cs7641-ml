@@ -8,10 +8,13 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 from sklearn.cluster import KMeans
 import pandas as pd
+import logging
 
 
 def plot_elbow(df):
     ax = df.plot()
+    plt.xlabel('n_clusters')
+    plt.ylabel('score')
     return ax
 
 
@@ -25,9 +28,10 @@ def plot_tsne(X, clusters, n_clusters):
     t0 = default_timer()
     y = tsne.fit_transform(X)
     t1 = default_timer()
-    print('TSNE for {} clusters took {} seconds'.format(n_clusters, t1 - t0))
+    logging.info('TSNE for {} clusters took {} seconds'.format(n_clusters, t1 - t0))
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
+    plt.title('tSNE: {} clusters'.format(n_clusters))
 
     for i in range(n_clusters):
         c = clusters == i
@@ -53,49 +57,66 @@ def score_clusters(estimator, X, y):
     return np.array([sil_score, vmeasure, ami, db_score]), score_names
 
 
-def cluster(part_range, X, y, savedir, dataset):
-    # KMeans
-    km = [make_pipeline(StandardScaler(), KMeans(n_clusters=i, random_state=100))
-          for i in part_range]
-    # Expectation Maximization
-    em = [make_pipeline(StandardScaler(), GaussianMixture(n_components=i))
-          for i in part_range]
+def cluster(part_range, X, y, savedir, dataset,
+            tnse_range=range(3, 5), dr_step=None):
+    if dr_step:
+        km = make_pipeline(StandardScaler(),
+                           dr_step,
+                           KMeans(random_state=100))
+        em = make_pipeline(StandardScaler(),
+                           dr_step,
+                           GaussianMixture(random_state=100))
+        dr_name = '_' + dr_step.__class__.__name__.lower()
+        logging.info('Running clustering with {}'.format(dr_name))
+    else:
+        # KMeans
+        km = make_pipeline(StandardScaler(), KMeans(random_state=100))
+        # Expectation Maximization
+        em = make_pipeline(StandardScaler(), GaussianMixture())
+        dr_name = None
 
     # Get scores for all kmeans estimators
     km_scores = np.zeros((len(part_range), 4))
     km_colnames = None
-    for i, est in enumerate(km):
-        km[i].fit(X)
-        scores, km_colnames = score_clusters(km[i], X, y)
+    km_clusters = []
+    for i, n in enumerate(part_range):
+        km.named_steps['kmeans'].set_params(n_clusters=n)
+        km.fit(X)
+        km_clusters.append(km.predict(X))
+        scores, km_colnames = score_clusters(km, X, y)
         km_scores[i] = scores
+
+        # TNSE relatively expensive to compute, so do for limited range only
+        if tnse_range and n in tnse_range:
+            km_train_pred = km.predict(X)
+            plot_tsne(X, km_train_pred, n)
+            plt.savefig('{}/{}-km{}-tsne-{}.png'.format(savedir, dataset, dr_name, n))
     km_scores = pd.DataFrame(km_scores, index=part_range, columns=km_colnames)
-    km_scores.to_csv('{}/{}-km-clusters.csv'.format(savedir, dataset))
-    print('KM Scores\n', km_scores)
+    km_scores.to_csv('{}/{}-km{}-clusters.csv'.format(savedir, dataset, dr_name))
+    logging.info('KM Scores\n{}'.format(km_scores))
     ax = plot_elbow(km_scores)
-    plt.savefig('{}/{}-km-elbow.png'.format(savedir, dataset))
+    plt.savefig('{}/{}-km{}-elbow.png'.format(savedir, dataset, dr_name))
 
     # Do same for em estimators
     em_scores = np.zeros((len(part_range), 4))
     em_colnames = None
-    for i, est in enumerate(km):
-        em[i].fit(X)
-        scores, em_colnames = score_clusters(em[i], X, y)
+    em_clusters = []
+    for i, n in enumerate(part_range):
+        em.named_steps['gaussianmixture'].set_params(n_components=n)
+        em.fit(X)
+        em_clusters.append(em.predict(X))
+        scores, em_colnames = score_clusters(em, X, y)
         em_scores[i] = scores
-    em_scores = pd.DataFrame(em_scores, index=part_range, columns=em_colnames)
-    em_scores.to_csv('{}/{}-em-clusters.csv'.format(savedir, dataset))
-    print('EM Scores\n', em_scores)
-    plot_elbow(em_scores)
-    plt.savefig('{}/{}-em-elbow.png'.format(savedir, dataset))
 
-    # Elbow says 3 or 4 clusters best with dataset
-    # TNSE plot shows three distinct clusters
-    for i in range(3, 5):
-        km_train_pred = km[i].predict(X)
-        em_train_pred = em[i].predict(X)
-        plot_tsne(X, km_train_pred, i)
-        plt.savefig('{}/{}-km-tsne-{}.png'.format(savedir, dataset, i))
-        plot_tsne(X, em_train_pred, i)
-        plt.savefig('{}/{}-em-tsne-{}.png'.format(savedir, dataset, i))
+        if tnse_range and n in tnse_range:
+            em_train_pred = em.predict(X)
+            plot_tsne(X, em_train_pred, n)
+            plt.savefig('{}/{}-em{}-tsne-{}.png'.format(savedir, dataset, dr_name, n))
+    em_scores = pd.DataFrame(em_scores, index=part_range, columns=em_colnames)
+    em_scores.to_csv('{}/{}-em{}-clusters.csv'.format(savedir, dataset, dr_name))
+    logging.info('EM Scores\n{}'.format(em_scores))
+    plot_elbow(em_scores)
+    plt.savefig('{}/{}-em{}-elbow.png'.format(savedir, dataset, dr_name))
 
     plt.close('all')
-    return km, em
+    return km_clusters, em_clusters
