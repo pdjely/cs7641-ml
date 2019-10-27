@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA, FastICA
 from sklearn.pipeline import make_pipeline
+import A1
 
 
 def main():
-    args = getArgs()
+    args = get_args()
     savedir = util.mktmpdir(args.outdir)
 
     for ds in ['musk']:
@@ -34,23 +35,26 @@ def main():
         # ************************ #
 
         # PCA
-        pca = make_pipeline(StandardScaler(), PCA(0.95))
-        reduced = pca.fit_transform(x_train)
-        print('pca found', pca.named_steps['pca'].n_components_, ' components')
-        plt.scatter(reduced[y_train == 0, 0], reduced[y_train == 0, 1])
-        plt.scatter(reduced[y_train == 1, 0], reduced[y_train == 1, 1])
+        pca = A3.pca(x_train, y_train)
         plt.savefig('{}/pca.png'.format(savedir))
         np.savetxt('{}/{}-pca-ev.csv'.format(savedir, ds),
                    pca.named_steps['pca'].explained_variance_)
 
-        # ICA
-        # ica = make_pipeline(StandardScaler(), FastICA(max_iter=500))
-        # reduced = ica.fit_transform(x_train)
-        # print('Component shape:', ica.named_steps['fastica'].components_.shape)
-        # print(ica.named_steps['fastica'].components_)
+        # *********************** #
+        # **** DR + Cluster  **** #
+        # *********************** #
+
+        # make pipeline with best pca and best cluster number
+        ann, _ = A1.getClfParams('ann')
+        ann.set_params(hidden_layer_sizes=(200, 200))
+        pipe = make_pipeline(StandardScaler(), PCA(0.95), ann)
+        pipe.fit(x_train, y_train)
 
 
-def getArgs():
+
+
+
+def get_args():
     parser = argparse.ArgumentParser(description='CS7641 Assignment 3')
 
     phases = ['cluster', 'dr', 'dr-cluster', 'dr-nn', 'dr-cluster-nn']
