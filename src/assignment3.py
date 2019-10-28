@@ -14,7 +14,7 @@ def main():
     args = get_args()
     savedir = util.mktmpdir(args.outdir)
 
-    for ds in ['musk', 'shoppers']:
+    for ds in ['musk']:
         # Logging copy-pasted from logging cookbook
         # http://docs.python.org/howto/logging-cookbook.html#logging-to-multiple-destinations
         logging.basicConfig(format='%(asctime)s %(message)s',
@@ -100,15 +100,19 @@ def dr(X, y, savedir, ds):
 
     # second ICA
     ica = None
-    best_ica_err = np.inf
-    for i in range(10, 110, 10):
+    max_kurtosis = -np.inf
+    ica_range = range(10, X.shape[1], 10)
+    kurt_per_comp = []
+    for i in ica_range:
         ica_pipe = A3.ica(X, y, i)
         # This should be selected by kurtosis
-        err = A3.recon_error(ica_pipe.named_steps['fastica'], X)
-        logging.info('ICA {} components reconstruction error: {}'
-                     .format(i, err))
-        if err < best_ica_err:
+        kurt = A3.avg_kurtosis(ica_pipe.transform(X))
+        kurt_per_comp.append(kurt)
+        logging.info('ICA {} average kurtosis: {}'.format(i, kurt))
+        if kurt > max_kurtosis:
             ica = ica_pipe.named_steps['fastica']
+    plt.plot(ica_range, kurt_per_comp)
+    plt.savefig('{}/{}-ica-kurtosis.png'.format(savedir, ds))
 
     # RP
     rp = None

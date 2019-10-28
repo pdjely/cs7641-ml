@@ -7,6 +7,7 @@ from sklearn.cluster import KMeans
 from sklearn.random_projection import GaussianRandomProjection
 import logging
 import numpy as np
+import pandas as pd
 
 
 def pca(X, y, n_components=0.95):
@@ -60,3 +61,8 @@ def recon_error(trans, X):
     inv = proj.dot(trans.components_) + X_scaled.mean(axis=0)
     err = ((X_scaled - inv)**2).mean()
     return err
+
+
+def avg_kurtosis(projections):
+    X = pd.DataFrame(projections)
+    return np.mean(X.kurtosis(axis=0))
