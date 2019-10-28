@@ -96,7 +96,7 @@ def dr(X, y, savedir, ds):
     plt.savefig('{}/{}-pca-ev.png'.format(savedir, ds))
     plt.close('all')
     reconstruction_error = A3.recon_error(pca, X)
-    logging.info('PCA reconstruction error: ', reconstruction_error)
+    logging.info('PCA reconstruction error: {}'.format(reconstruction_error))
 
     # second ICA
     ica = None
