@@ -9,7 +9,8 @@ import timeit
 def ann_factory(dsname):
     hidden_layers = {
         'musk': (200, 200),
-        'shoppers': (20, 20, 20)
+        'shoppers': (20, 20, 20),
+        'cancer': (10,)
     }
 
     ann = MLPClassifier(solver='adam',

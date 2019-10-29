@@ -8,24 +8,27 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 from sklearn.preprocessing import OneHotEncoder
 import logging
+from statistics import mode, StatisticsError
 
 
 def main():
     args = get_args()
     savedir = util.mktmpdir(args.outdir)
 
-    for ds in ['musk']:
-        # Logging copy-pasted from logging cookbook
-        # http://docs.python.org/howto/logging-cookbook.html#logging-to-multiple-destinations
-        logging.basicConfig(format='%(asctime)s %(message)s',
-                            filename='{}/{}.log'.format(savedir, ds),
-                            level=logging.INFO)
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
+    # Logging copy-pasted from logging cookbook
+    # http://docs.python.org/howto/logging-cookbook.html#logging-to-multiple-destinations
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        filename='{}/output.log'.format(savedir),
+                        level=logging.INFO)
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    logging.getLogger('').addHandler(console)
+    for ds in ['musk', 'shoppers']:
         formatter = logging.Formatter('{}: %(levelname)-8s %(message)s'
                                       .format(ds))
         console.setFormatter(formatter)
-        logging.getLogger('').addHandler(console)
+        logging.info('==========Starting {} Dataset =============='
+                     .format(ds))
 
         dataset = datajanitor.getDataset(ds)
         dataset.getData()
@@ -48,16 +51,8 @@ def main():
         # **** DR + Cluster  **** #
         # *********************** #
         if 'dr-cluster' in args.phase or 'dr-cluster-nn' in args.phase:
-            km_test_clust, em_test_clust = dr_cluster(x_test,
-                                                      y_test,
-                                                      dr_steps,
-                                                      savedir,
-                                                      ds)
-            km_train_clust, em_train_clust = dr_cluster(x_train,
-                                                        y_train,
-                                                        dr_steps,
-                                                        savedir,
-                                                        ds)
+            km_train_clust, em_train_clust, km_test_clust, em_test_clust = \
+                dr_cluster(x_train, y_train, x_test, dr_steps, savedir, ds)
 
             # ******************************* #
             # **** Clusters as features  **** #
@@ -90,6 +85,7 @@ def dr(X, y, savedir, ds):
                pca.explained_variance_)
     np.savetxt('{}/{}-pca-ev-ratio.csv'.format(savedir, ds),
                pca.explained_variance_ratio_)
+    plt.close('all')
     plt.plot(np.cumsum(pca.explained_variance_ratio_))
     plt.xlabel('n_components')
     plt.ylabel('explained variance (%)')
@@ -111,59 +107,92 @@ def dr(X, y, savedir, ds):
         logging.info('ICA {} average kurtosis: {}'.format(i, kurt))
         if kurt > max_kurtosis:
             ica = ica_pipe.named_steps['fastica']
+            max_kurtosis = kurt
+    logging.info('ICA max kurtosis {} with {} components'
+                 .format(max_kurtosis, ica.components_.shape[0]))
     plt.plot(ica_range, kurt_per_comp)
+    plt.xlabel('n_components')
+    plt.ylabel('mean kurtosis')
     plt.savefig('{}/{}-ica-kurtosis.png'.format(savedir, ds))
 
     # RP
+    logging.info('Starting randomized projection...')
+    rp_errors = []
     rp = None
     best_rp_err = np.inf
-    for i in range(10, 160, 20):
-        rp_pipe = A3.random_projection(X, y, i)
-        err = A3.recon_error(rp_pipe.named_steps['gaussianrandomprojection'], X)
-        logging.info('RP {} components reconstruction error: {}'
-                     .format(i, err))
-        if err < best_rp_err:
-            rp = rp_pipe.named_steps['gaussianrandomprojection']
-
+    for rp_run in range(10):
+        logging.info('RP iteration {}'.format(rp_run))
+        best_run = np.inf
+        for i in range(10, X.shape[1], 10):
+            rp_pipe = A3.random_projection(X, y, i)
+            err = A3.recon_error(rp_pipe.named_steps['gaussianrandomprojection'], X)
+            logging.info('RP {} components reconstruction error: {}'
+                         .format(i, err))
+            if err < best_rp_err:
+                rp = rp_pipe.named_steps['gaussianrandomprojection']
+                best_rp_err = err
+            if err < best_run:
+                best_run = err
+        rp_errors.append(best_run)
+    plt.figure()
+    plt.plot(range(10), rp_errors)
+    plt.xlabel('iteration')
+    plt.ylabel('reconstruction error')
+    plt.savefig('{}/{}-rp-reconstruction.png'.format(savedir, ds))
+    plt.close('all')
     logging.info('RP best n_components: {}'.format(rp.n_components_))
 
     # TODO: fourth dimension reduction
+    rf_pipe = A3.rfselect(X, y)
+    rf = rf_pipe.named_steps['randomforest']
 
-    return [pca, ica, rp]
+    return [pca, ica, rp, rf]
 
 
 def add_cluster_dims(X, clusters):
-    oh = OneHotEncoder()
+    oh = OneHotEncoder(categories='auto')
     c = oh.fit_transform(clusters.reshape(-1, 1)).toarray()
     return np.append(X, c, axis=1)
 
 
-def dr_cluster(X, y, dr_steps, savedir, ds):
+def dr_cluster(X, y, X_test, dr_steps, savedir, ds):
     """
     Apply dimensionality reduction and then KMeans and EM clustering
     :param X: np array, training samples
     :param y: np array, labels
+    :param X_test: np.array, test data
     :param dr_steps: list of dimensionality reduction objects
     :param savedir: string, output directory
     :param ds: string, name of dataset
     :return: tuple, best clusters for each dr type
     """
+    cluster_idx = {
+        'musk': 1,
+        'cancer': 0,
+        'shoppers': 2
+    }
     best_km = []
     best_em = []
+    best_test_km = []
+    best_test_em = []
     for dr_step in dr_steps:
-        km, em = A3.cluster(range(2, 21), X, y,
-                            savedir, ds,
-                            tnse_range=None,
-                            dr_step=dr_step)
-        best_km.append(km[1])
-        best_em.append(em[1])
+        km, em, km_test, em_test = A3.cluster(range(2, 21), X, y,
+                                              savedir, ds,
+                                              tnse_range=range(3, 5),
+                                              dr_step=dr_step,
+                                              X_test=X_test)
 
-    return best_km, best_em
+        best_km.append(km[cluster_idx[ds]])
+        best_em.append(em[cluster_idx[ds]])
+        best_test_km.append(km_test[cluster_idx[ds]])
+        best_test_em.append(em_test[cluster_idx[ds]])
+
+    return best_km, best_em, best_test_km, best_test_em
 
 
 def dr_ann(X_train, y_train, X_test, y_test, dr_steps, savedir, ds,
            cluster=None):
-    if cluster:
+    if cluster is not None:
         c = ' with clustering from {}'.format(cluster)
     else:
         c = ''
@@ -187,7 +216,9 @@ def dr_ann(X_train, y_train, X_test, y_test, dr_steps, savedir, ds,
                              y_test, ypred, savedir)
         scores.append(f1_score(y_test, ypred))
 
-    util.plotBarScores(scores, score_names, '', savedir, phaseName=ds)
+    logging.info('ANN {} F1 Scores: {}'.format(c, scores))
+    util.plotBarScores(scores, score_names, ds, savedir,
+                       phaseName='{}-{}'.format(ds, cluster))
     plt.close('all')
 
 

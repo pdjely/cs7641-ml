@@ -1,10 +1,10 @@
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import make_pipeline, Pipeline
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA, FastICA
-from sklearn.mixture import GaussianMixture
-from sklearn.cluster import KMeans
 from sklearn.random_projection import GaussianRandomProjection
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFECV, SelectFromModel
 import logging
 import numpy as np
 import pandas as pd
@@ -30,6 +30,42 @@ def ica(X, y, n_components=None):
     # logging.info(pipe.named_steps['fastica'].components_)
 
     return pipe
+
+
+def rfselect(X, y):
+    """
+    Use recursive feature selection with random forest to select optimal feat
+
+    Source:
+        https://scikit-learn.org/stable/auto_examples/feature_selection/plot_rfe_with_cross_validation.html#sphx-glr-auto-examples-feature-selection-plot-rfe-with-cross-validation-py
+        https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.RFECV.html#sklearn.feature_selection.RFECV
+    :param X:
+    :param y:
+    :return:
+    """
+    pipe = make_pipeline(StandardScaler(),
+                         RFECV(RandomForestClassifier(n_estimators=500),
+                               step=5,
+                               scoring='f1_weighted',
+                               cv=3,
+                               n_jobs=-1))
+    pipe.fit(X, y)
+    logging.info('Random Forest: Optimal number of features: {}'
+                 .format(pipe.named_steps['rfecv'].n_features_))
+
+    # Plot number of features VS. cross-validation scores
+    plt.figure()
+    plt.xlabel("Number of features selected")
+    plt.ylabel("Cross validation score (nb of correct classifications)")
+    plt.plot(range(1, len(pipe.named_steps['rfecv'].grid_scores_) + 1),
+             pipe.named_steps['rfecv'].grid_scores_)
+
+    # Don't want to re-do recursive cv at run time
+    rf = Pipeline([('scaler', StandardScaler()),
+                   ('randomforest', SelectFromModel(RandomForestClassifier(n_estimators=500),
+                                                    threshold=-np.inf,
+                                                    max_features=pipe.named_steps['rfecv'].n_features_))])
+    return rf
 
 
 def random_projection(X, y, n_components='auto'):
