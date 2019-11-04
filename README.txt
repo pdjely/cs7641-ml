@@ -6,19 +6,29 @@ Conda
 
 Install
 =======
-1. Clone repository: git clone https://github.com/pdjely-ml.git
+1. Clone repository: git clone https://github.com/pdjely/cs7641-ml.git
 2. Install conda dependencies: conda env create -f environment.yaml
+
 
 Activate Environment
 ====================
+cd cs7641-ml
 conda activate cs7641
 
-Install MLRose pdjely fork (first run only)
-===========================================
-pip install git+https://github.com/pdjely/mlrose.git
+Assignment 3
+============
+checkout a3
+cd src
+python assignment3.py
 
+
+****************** PREVIOUS ASSIGNMENTS *********************************
 Assignment 2
 ============
+
+# Install MLRose pdjely fork (first run only)
+pip install git+https://github.com/pdjely/mlrose.git
+
 # Run all experiments
 cd src
 python assignment2.py
