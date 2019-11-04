@@ -54,7 +54,7 @@ def score_clusters(estimator, X, y):
     ami = metrics.adjusted_mutual_info_score(y, ypred, average_method='arithmetic')
 
     score_names = ['silhouette', 'davies-bouldin', 'v-measure', 'adj mutual inf']
-    return np.array([sil_score, vmeasure, ami, db_score]), score_names
+    return np.array([sil_score, db_score, vmeasure, ami]), score_names
 
 
 def cluster(part_range, X, y, savedir, dataset,

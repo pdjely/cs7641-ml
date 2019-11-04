@@ -39,7 +39,6 @@ def dr_ann(X, y, dr_step, ds):
 
 def baseline_ann(X, y, ds):
     ann = ann_factory(ds)
-    print(y.shape)
     pipe = make_pipeline(StandardScaler(),
                          ann)
     start_time = timeit.default_timer()

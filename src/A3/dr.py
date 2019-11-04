@@ -93,9 +93,10 @@ def recon_error(trans, X):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    proj = trans.fit_transform(X_scaled)
+    proj = trans.transform(X_scaled)
     inv = proj.dot(trans.components_) + X_scaled.mean(axis=0)
     err = ((X_scaled - inv)**2).mean()
+
     return err
 
 

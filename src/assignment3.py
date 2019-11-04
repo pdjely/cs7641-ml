@@ -38,8 +38,62 @@ def main():
         # ********************* #
         # **** Clustering  **** #
         # ********************* #
-        if 'cluster' in args.phase:
-            A3.cluster(range(2, 21), x_train, y_train, savedir, ds)
+        if 'cluster' in args.phase or 'cluster-ann' in args.phase:
+            km_train_clust, em_train_clust, km_test_clust, em_test_clust = \
+                A3.cluster(range(2, 21), x_train, y_train, savedir, ds,
+                           tnse_range=None,
+                           X_test=x_test)
+
+            # ******************************* #
+            # **** Clusters as features  **** #
+            # ******************************* #
+            # one-hot encode and then add clusters to train and test features
+            cluster_nn_scores = {
+                'km': [],
+                'em': [],
+                'km+em': [],
+                'km_only': [],
+                'em_only': [],
+                'kmem_only': []
+            }
+            if 'cluster-ann' in args.phase:
+                for i in range(5):
+                    km_x_train = add_cluster_dims(x_train, km_train_clust[i])
+                    km_x_test = add_cluster_dims(x_test, km_test_clust[i])
+                    em_x_train = add_cluster_dims(x_train, em_train_clust[i])
+                    em_x_test = add_cluster_dims(x_test, em_test_clust[i])
+                    km_score = cluster_nn(km_x_train, y_train, km_x_test, y_test,
+                                          savedir, ds, 'km{}'.format(i+2))
+                    em_score = cluster_nn(em_x_train, y_train, em_x_test, y_test,
+                                          savedir, ds, 'em{}'.format(i+2))
+                    kmem_x_train = add_cluster_dims(km_x_train, em_train_clust[i])
+                    kmem_x_test = add_cluster_dims(km_x_test, em_test_clust[i])
+                    kmem_score = cluster_nn(kmem_x_train, y_train, kmem_x_test, y_test,
+                                            savedir, ds, 'kmem{}'.format(i+2))
+                    # do only clusters
+                    km_only = cluster_nn(km_train_clust[i].reshape(-1, 1), y_train, km_test_clust[i].reshape(-1, 1),
+                                         y_test, savedir, ds, 'km_only{}'.format(i+2))
+                    em_only = cluster_nn(km_train_clust[i].reshape(-1, 1), y_train, km_test_clust[i].reshape(-1, 1),
+                                         y_test, savedir, ds, 'em_only{}'.format(i + 2))
+                    kmem_only = cluster_nn(np.append(km_train_clust[i].reshape(-1, 1),
+                                                     em_train_clust[i].reshape(-1, 1), axis=1),
+                                           y_train,
+                                           np.append(km_test_clust[i].reshape(-1, 1),
+                                                     em_test_clust[i].reshape(-1, 1), axis=1),
+                                           y_test, savedir, ds, 'kmem_only{}'.format(i + 2))
+                    util.plotBarScores([km_score, em_score, kmem_score, km_only, em_only, kmem_only],
+                                       ['km-ann', 'em-ann', 'kmem-ann', 'km_only', 'em_only', 'kmem_only'],
+                                       ds, savedir,
+                                       phaseName='{}-cluster-{}-ann'.format(ds, i+2))
+                    cluster_nn_scores['km'].append(km_score)
+                    cluster_nn_scores['em'].append(em_score)
+                    cluster_nn_scores['km+em'].append(kmem_score)
+                    cluster_nn_scores['km_only'].append(km_only)
+                    cluster_nn_scores['em_only'].append(em_only)
+                    cluster_nn_scores['kmem_only'].append(kmem_only)
+                    plt.close('all')
+                pd.DataFrame.from_dict(data=cluster_nn_scores).to_csv('{}/{}-clusternn.csv'
+                                                                      .format(savedir, ds))
 
         # ************************ #
         # **** Dim Reduction  **** #
@@ -50,24 +104,9 @@ def main():
         # *********************** #
         # **** DR + Cluster  **** #
         # *********************** #
-        if 'dr-cluster' in args.phase or 'dr-cluster-nn' in args.phase:
+        if 'dr-cluster' in args.phase:
             km_train_clust, em_train_clust, km_test_clust, em_test_clust = \
                 dr_cluster(x_train, y_train, x_test, dr_steps, savedir, ds)
-
-            # ******************************* #
-            # **** Clusters as features  **** #
-            # ******************************* #
-            # one-hot encode and then add clusters to train and test features
-            if 'dr-cluster-nn' in args.phase:
-                for i, dr_step in enumerate(dr_steps):
-                    km_x_train = add_cluster_dims(x_train, km_train_clust[i])
-                    km_x_test = add_cluster_dims(x_test, km_test_clust[i])
-                    em_x_train = add_cluster_dims(x_train, em_train_clust[i])
-                    em_x_test = add_cluster_dims(x_test, em_test_clust[i])
-                    dr_ann(km_x_train, y_train, km_x_test, y_test,
-                           [dr_step], savedir, ds, 'km')
-                    dr_ann(em_x_train, y_train, em_x_test, y_test,
-                           [dr_step], savedir, ds, 'em')
 
         # ******************* #
         # **** DR + ANN  **** #
@@ -120,12 +159,15 @@ def dr(X, y, savedir, ds):
     rp_errors = []
     rp = None
     best_rp_err = np.inf
+    reconstruction_errors = []
     for rp_run in range(10):
         logging.info('RP iteration {}'.format(rp_run))
         best_run = np.inf
+        run_errors = []
         for i in range(10, X.shape[1], 10):
             rp_pipe = A3.random_projection(X, y, i)
             err = A3.recon_error(rp_pipe.named_steps['gaussianrandomprojection'], X)
+            run_errors.append(err)
             logging.info('RP {} components reconstruction error: {}'
                          .format(i, err))
             if err < best_rp_err:
@@ -133,7 +175,16 @@ def dr(X, y, savedir, ds):
                 best_rp_err = err
             if err < best_run:
                 best_run = err
+        reconstruction_errors.append(run_errors)
         rp_errors.append(best_run)
+    pd.DataFrame(reconstruction_errors, columns=range(10, X.shape[1], 10)).to_csv('{}/{}-rp-reconstruction.csv'
+                                                                                  .format(savedir, ds))
+    # Manually set random projection
+    if ds == 'musk':
+        rp.set_params(n_components=50)
+    elif ds == 'shoppers':
+        rp.set_params(n_components=30)
+
     plt.figure()
     plt.plot(range(10), rp_errors)
     plt.xlabel('iteration')
@@ -169,12 +220,13 @@ def dr_cluster(X, y, X_test, dr_steps, savedir, ds):
     cluster_idx = {
         'musk': 1,
         'cancer': 0,
-        'shoppers': 2
+        'shoppers': 0
     }
     best_km = []
     best_em = []
     best_test_km = []
     best_test_em = []
+
     for dr_step in dr_steps:
         km, em, km_test, em_test = A3.cluster(range(2, 21), X, y,
                                               savedir, ds,
@@ -188,6 +240,16 @@ def dr_cluster(X, y, X_test, dr_steps, savedir, ds):
         best_test_em.append(em_test[cluster_idx[ds]])
 
     return best_km, best_em, best_test_km, best_test_em
+
+
+def cluster_nn(X_train, y_train, X_test, y_test, savedir, ds, cluster_type):
+    logging.info('Running neural net with {} clusters as features'
+                 .format(cluster_type))
+    pipe = A3.baseline_ann(X_train, y_train, ds)
+    ypred = pipe.predict(X_test)
+    util.confusionMatrix('{}-{}-ann'.format(ds, cluster_type),
+                         y_test, ypred, savedir)
+    return f1_score(y_test, ypred)
 
 
 def dr_ann(X_train, y_train, X_test, y_test, dr_steps, savedir, ds,
@@ -225,7 +287,7 @@ def dr_ann(X_train, y_train, X_test, y_test, dr_steps, savedir, ds,
 def get_args():
     parser = argparse.ArgumentParser(description='CS7641 Assignment 3')
 
-    phases = ['cluster', 'dr', 'dr-cluster', 'dr-nn', 'dr-cluster-nn']
+    phases = ['cluster', 'dr', 'dr-cluster', 'dr-nn', 'cluster-ann']
     validData = ['musk', 'shoppers']
     parser.add_argument('-p', '--phase',
                         help='Space-separated list of phases to run (default: all)',
