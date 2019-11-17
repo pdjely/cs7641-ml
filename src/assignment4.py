@@ -24,18 +24,20 @@ print('====== Running Tic Tac Toe =======')
 
 print('\nValue Iteration')
 P, R = ttt.getTransitionAndRewardArrays()
-ttt_vi = mdp.ValueIteration(P, R, 0.99)
+ttt_vi = mdp.ValueIteration(P, R, gamma)
 ttt_vi.setVerbose()
 ttt_vi.run()
-
 print(f'MDP Toolbox VI finished in {ttt_vi.iter} iterations')
 print(f'Accumulated reward: {len(ttt_vi.rewards)}')
 print(f'Rewards: {ttt_vi.rewards}')
 
 print('\nPolicy Iteration')
-ttt_pi = mdp.PolicyIteration(P, R, 0.99)
+ttt_pi = mdp.PolicyIteration(P, R, gamma)
 ttt_pi.setVerbose()
 ttt_pi.run()
 print(f'MDP Toolbox PI finished in {ttt_pi.iter} iterations')
 print(f'Accumulated reward: {len(ttt_pi.rewards)}')
 print(f'Rewards: {ttt_pi.rewards}')
+
+print('\nQ-Learning')
+ttt_q = mdp.QLearning(P, R, gamma)
