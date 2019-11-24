@@ -15,7 +15,8 @@ Activate Environment and Install Additional Deps
 ================================================
 cd cs7641-ml
 conda activate cs7641
-pip install git+https://github.com/pdjely/pymdptoolbox.git
+# Set up additional dependencies
+sh ./a4_setup.sh
 
 
 Run Assignment 4
@@ -23,42 +24,3 @@ Run Assignment 4
 cd src
 python assignment4.py
 
-
-****************** PREVIOUS ASSIGNMENTS *********************************
-
-Assignment 3
-============
-checkout a3
-cd src
-python assignment3.py
-
-
-Assignment 2
-============
-
-# Install MLRose pdjely fork (first run only)
-pip install git+https://github.com/pdjely/mlrose.git
-
-# Run all experiments
-cd src
-python assignment2.py
-
-----------------
-A Note on MLRose
-----------------
-This project uses my own fork of the MLRose repository. This fork is located at
-https://github.com/pdjely/mlrose. For this fork, I took modifications from
-fellow students David Park (fast MIMIC) and Andrew Rollings (modified GA). I
-did not use any of Andrews' other refactors, including any of his runner
-code.
-
-
-Assignment 1
-============
-
-# Check out Assignment 1
-git checkout a1
-
-# Run full experiment
-cd src
-python assignment1.py -d musk shoppers
